@@ -1,0 +1,11 @@
+Synthese executive - Audit de biais
+Date: 2026-06-16
+
+Constats principaux:
+- Accuracy baseline: 0.658
+- Disparate impact gender baseline: 1.041
+- Les mitigations executees sont reweighting et resampling.
+- La selection finale doit arbitrer fairness, performance et contraintes metier.
+
+Decision recommandee:
+- Utiliser reweighting comme premier candidat de production, puis monitorer par groupe.

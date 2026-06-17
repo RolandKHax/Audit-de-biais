@@ -1,0 +1,215 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapport d'Audit de Biais - 2026-06-16</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .section {
+            background: white;
+            padding: 30px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .metric {
+            display: inline-block;
+            background: #f8f9fa;
+            padding: 15px 25px;
+            margin: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .metric-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+        .recommendation {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .recommendation.high {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+        .recommendation.medium {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+        .recommendation.low {
+            background: #d1ecf1;
+            border-color: #17a2b8;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #667eea;
+            color: white;
+        }
+        .status-good { color: #28a745; font-weight: bold; }
+        .status-warning { color: #ffc107; font-weight: bold; }
+        .status-bad { color: #dc3545; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Rapport d'Audit de Biais</h1>
+            <p>Date: 16/06/2026 17:55</p>
+            <p>Dataset: data/processed/dataset.csv</p>
+        </div>
+        
+        <div class="section">
+            <h2>📈 Résumé Exécutif</h2>
+            <p>Ce rapport présente les résultats de l'audit de biais effectué sur le modèle de classification.
+            L'audit a évalué les métriques de fairness pour les attributs protégés: gender, race.</p>
+        </div>
+        
+        <div class="section">
+            <h2>📊 Performance Baseline</h2>
+            <div>
+                <div class="metric">
+                    <div class="metric-label">Accuracy</div>
+                    <div class="metric-value">0.6580</div>
+                </div>
+                
+                <div class="metric">
+                    <div class="metric-label">Precision</div>
+                    <div class="metric-value">0.6624</div>
+                </div>
+                
+                <div class="metric">
+                    <div class="metric-label">Recall</div>
+                    <div class="metric-value">0.9646</div>
+                </div>
+                
+                <div class="metric">
+                    <div class="metric-label">F1 Score</div>
+                    <div class="metric-value">0.7854</div>
+                </div>
+                </div>
+        </div>
+        
+        <div class="section">
+            <h2>⚖️ Métriques de Fairness</h2>
+            <h3>Attribut: gender</h3><table><tr><th>Métrique</th><th>Valeur</th><th>Statut</th></tr><tr><td>Disparate Impact</td><td>0.9607</td><td class="status-good">✓ Acceptable</td></tr><tr><td>Demographic Parity Difference</td><td>0.0378</td><td class="status-good">✓ Bon</td></tr></table><h3>Attribut: race</h3><table><tr><th>Métrique</th><th>Valeur</th><th>Statut</th></tr><tr><td>Disparate Impact</td><td>0.9993</td><td class="status-good">✓ Acceptable</td></tr><tr><td>Demographic Parity Difference</td><td>0.0006</td><td class="status-good">✓ Bon</td></tr></table>
+        </div>
+        
+        <div class="section">
+            <h2>🔧 Résultats du Débiaisage</h2>
+            <h3>Attribut: gender</h3><table><tr><th>Méthode</th><th>DI Avant</th><th>DI Après</th><th>Accuracy Avant</th><th>Accuracy Après</th></tr>
+                <tr>
+                    <td>Reweighting</td>
+                    <td>0.9607</td>
+                    <td>0.9965</td>
+                    <td>0.6580</td>
+                    <td>0.6460</td>
+                </tr>
+                
+                <tr>
+                    <td>Resampling</td>
+                    <td>0.9607</td>
+                    <td>0.9472</td>
+                    <td>0.6580</td>
+                    <td>0.6570</td>
+                </tr>
+                </table><h3>Attribut: race</h3><table><tr><th>Méthode</th><th>DI Avant</th><th>DI Après</th><th>Accuracy Avant</th><th>Accuracy Après</th></tr>
+                <tr>
+                    <td>Reweighting</td>
+                    <td>0.9993</td>
+                    <td>0.9992</td>
+                    <td>0.6580</td>
+                    <td>0.6470</td>
+                </tr>
+                
+                <tr>
+                    <td>Resampling</td>
+                    <td>0.9993</td>
+                    <td>1.0070</td>
+                    <td>0.6580</td>
+                    <td>0.6190</td>
+                </tr>
+                </table>
+        </div>
+        
+        <div class="section">
+            <h2>💡 Recommandations</h2>
+            
+            <div class="recommendation high">
+                <strong>[HIGH] Governance</strong><br>
+                <em>Issue:</em> Absence de monitoring continu<br>
+                <em>Recommandation:</em> Mettre en place un système de monitoring des métriques de fairness en production<br>
+                <em>Impact attendu:</em> Détection précoce des dérives de fairness
+            </div>
+            
+            <div class="recommendation medium">
+                <strong>[MEDIUM] Documentation</strong><br>
+                <em>Issue:</em> Documentation du modèle incomplète<br>
+                <em>Recommandation:</em> Créer une Model Card documentant les décisions de fairness et les limitations<br>
+                <em>Impact attendu:</em> Meilleure transparence et gouvernance
+            </div>
+            
+        </div>
+        
+        <div class="section">
+            <h2>📝 Méthodologie</h2>
+            <p>Cet audit a été réalisé en suivant les meilleures pratiques en matière d'évaluation de fairness:</p>
+            <ul>
+                <li>Calcul de métriques standards (Demographic Parity, Equalized Odds, Disparate Impact)</li>
+                <li>Évaluation stratifiée par groupe</li>
+                <li>Application et comparaison de techniques de débiaisage</li>
+                <li>Génération de recommandations actionnables</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
+        

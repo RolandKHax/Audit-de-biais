@@ -1,0 +1,305 @@
+{
+  "metadata": {
+    "timestamp": "2026-06-16T17:55:34.453587",
+    "config": {
+      "data_path": "data/processed/dataset.csv",
+      "model_path": null,
+      "protected_attrs": [
+        "gender",
+        "race"
+      ],
+      "label_name": "label",
+      "debiasing_methods": [
+        "reweighting",
+        "resampling"
+      ],
+      "output_path": "reports/audit_report.html",
+      "output_dir": "reports/figures"
+    }
+  },
+  "data_analysis": {
+    "demographics": {
+      "gender": {
+        "counts": {
+          "Male": 2999,
+          "Female": 2001
+        },
+        "proportions": {
+          "Male": 0.5998,
+          "Female": 0.4002
+        },
+        "unique_values": 2
+      },
+      "race": {
+        "counts": {
+          "White": 3109,
+          "Black": 928,
+          "Hispanic": 482,
+          "Asian": 481
+        },
+        "proportions": {
+          "White": 0.6218,
+          "Black": 0.1856,
+          "Hispanic": 0.0964,
+          "Asian": 0.0962
+        },
+        "unique_values": 4
+      },
+      "label": {
+        "counts": {
+          "1": 3245,
+          "0": 1755
+        },
+        "proportions": {
+          "1": 0.649,
+          "0": 0.351
+        }
+      },
+      "intersectional": {
+        "gender_race": {
+          "Asian": {
+            "Female": 196,
+            "Male": 285
+          },
+          "Black": {
+            "Female": 380,
+            "Male": 548
+          },
+          "Hispanic": {
+            "Female": 182,
+            "Male": 300
+          },
+          "White": {
+            "Female": 1243,
+            "Male": 1866
+          }
+        }
+      }
+    },
+    "quality": {
+      "missing_values": {
+        "gender": 0,
+        "race": 0,
+        "age": 0,
+        "education": 0,
+        "years_experience": 0,
+        "test_score": 0,
+        "label": 0
+      },
+      "duplicates": "0",
+      "dtypes": {
+        "gender": "object",
+        "race": "object",
+        "age": "int64",
+        "education": "object",
+        "years_experience": "int64",
+        "test_score": "float64",
+        "label": "int64"
+      },
+      "outliers": {
+        "age": "0",
+        "years_experience": "0",
+        "test_score": "26",
+        "label": "0"
+      }
+    },
+    "proxies": {
+      "gender": [],
+      "race": []
+    }
+  },
+  "baseline_evaluation": {
+    "performance": {
+      "accuracy": 0.658,
+      "precision": 0.6624338624338625,
+      "recall": 0.9645608628659477,
+      "f1_score": 0.7854454203262233,
+      "roc_auc": 0.6150465980974456,
+      "confusion_matrix": "[[ 32 319]\n [ 23 626]]",
+      "true_negatives": "32",
+      "false_positives": "319",
+      "false_negatives": "23",
+      "true_positives": "626",
+      "specificity": 0.09116809116809117,
+      "sensitivity": 0.9645608628659477
+    },
+    "fairness": {
+      "gender": {
+        "demographic_parity_difference": 0.03776079132940513,
+        "demographic_parity_ratio": 0.9606685691698917,
+        "disparate_impact": 0.9606685691698917,
+        "tpr_difference": 0.004447933019361527,
+        "fpr_difference": 0.0641688481675392,
+        "average_odds_difference": 0.034308390593450366,
+        "equal_opportunity_difference": 0.004447933019361527,
+        "predictive_parity_difference": 0.19482329892246253,
+        "interpretation": {
+          "disparate_impact": "\u2713 Acceptable (r\u00e8gle des 80%)",
+          "demographic_parity": "\u2713 Bonne parit\u00e9 d\u00e9mographique",
+          "equalized_odds": "\u2713 Bonnes odds \u00e9galis\u00e9es"
+        }
+      },
+      "race": {
+        "demographic_parity_difference": 0.0006363879957127505,
+        "demographic_parity_ratio": 0.9993290960451977,
+        "disparate_impact": 0.9993290960451977,
+        "tpr_difference": 0.06719030137454107,
+        "fpr_difference": -0.11111111111111116,
+        "average_odds_difference": -0.021960404868285044,
+        "equal_opportunity_difference": 0.06719030137454107,
+        "predictive_parity_difference": 0.20134103184950636,
+        "interpretation": {
+          "disparate_impact": "\u2713 Acceptable (r\u00e8gle des 80%)",
+          "demographic_parity": "\u2713 Bonne parit\u00e9 d\u00e9mographique",
+          "equalized_odds": "\u2713 Bonnes odds \u00e9galis\u00e9es"
+        }
+      }
+    }
+  },
+  "debiasing_results": {
+    "gender": {
+      "reweighting": {
+        "fairness": {
+          "demographic_parity_difference": 0.003432041001005026,
+          "demographic_parity_ratio": 0.9964920805414897,
+          "disparate_impact": 0.9964920805414897,
+          "tpr_difference": -0.0011773940345368716,
+          "fpr_difference": 0.006413612565445037,
+          "average_odds_difference": 0.0026181092654540827,
+          "equal_opportunity_difference": -0.0011773940345368716,
+          "predictive_parity_difference": 0.2102722837206863,
+          "interpretation": {
+            "disparate_impact": "\u2713 Acceptable (r\u00e8gle des 80%)",
+            "demographic_parity": "\u2713 Bonne parit\u00e9 d\u00e9mographique",
+            "equalized_odds": "\u2713 Bonnes odds \u00e9galis\u00e9es"
+          }
+        },
+        "performance": {
+          "accuracy": 0.646,
+          "precision": 0.6509723643807575,
+          "recall": 0.9799691833590138,
+          "f1_score": 0.7822878228782287,
+          "roc_auc": 0.6025092296278737,
+          "confusion_matrix": "[[ 10 341]\n [ 13 636]]",
+          "true_negatives": "10",
+          "false_positives": "341",
+          "false_negatives": "13",
+          "true_positives": "636",
+          "specificity": 0.02849002849002849,
+          "sensitivity": 0.9799691833590138
+        }
+      },
+      "resampling": {
+        "fairness": {
+          "demographic_parity_difference": 0.04877418171051584,
+          "demographic_parity_ratio": 0.9471832734990631,
+          "disparate_impact": 0.9471832734990631,
+          "tpr_difference": 0.0063557474271759284,
+          "fpr_difference": 0.07699607329842939,
+          "average_odds_difference": 0.04167591036280266,
+          "equal_opportunity_difference": 0.0063557474271759284,
+          "predictive_parity_difference": 0.18933374635380362,
+          "interpretation": {
+            "disparate_impact": "\u2713 Acceptable (r\u00e8gle des 80%)",
+            "demographic_parity": "\u2713 Bonne parit\u00e9 d\u00e9mographique",
+            "equalized_odds": "\u2713 Bonnes odds \u00e9galis\u00e9es"
+          }
+        },
+        "performance": {
+          "accuracy": 0.657,
+          "precision": 0.6692477876106194,
+          "recall": 0.9322033898305084,
+          "f1_score": 0.7791371538956857,
+          "roc_auc": 0.6149544115645811,
+          "confusion_matrix": "[[ 52 299]\n [ 44 605]]",
+          "true_negatives": "52",
+          "false_positives": "299",
+          "false_negatives": "44",
+          "true_positives": "605",
+          "specificity": 0.14814814814814814,
+          "sensitivity": 0.9322033898305084
+        }
+      }
+    },
+    "race": {
+      "reweighting": {
+        "fairness": {
+          "demographic_parity_difference": 0.0007703644158627565,
+          "demographic_parity_ratio": 0.9992221320346321,
+          "disparate_impact": 0.9992221320346321,
+          "tpr_difference": 0.010950226244343941,
+          "fpr_difference": -0.011111111111111072,
+          "average_odds_difference": -8.044243338356516e-05,
+          "equal_opportunity_difference": 0.010950226244343941,
+          "predictive_parity_difference": 0.19524948735475045,
+          "interpretation": {
+            "disparate_impact": "\u2713 Acceptable (r\u00e8gle des 80%)",
+            "demographic_parity": "\u2713 Bonne parit\u00e9 d\u00e9mographique",
+            "equalized_odds": "\u2713 Bonnes odds \u00e9galis\u00e9es"
+          }
+        },
+        "performance": {
+          "accuracy": 0.647,
+          "precision": 0.6494949494949495,
+          "recall": 0.9907550077041603,
+          "f1_score": 0.7846247712019524,
+          "roc_auc": 0.6153099881913441,
+          "confusion_matrix": "[[  4 347]\n [  6 643]]",
+          "true_negatives": "4",
+          "false_positives": "347",
+          "false_negatives": "6",
+          "true_positives": "643",
+          "specificity": 0.011396011396011397,
+          "sensitivity": 0.9907550077041603
+        }
+      },
+      "resampling": {
+        "fairness": {
+          "demographic_parity_difference": -0.005493033226152133,
+          "demographic_parity_ratio": 1.0069870483980912,
+          "disparate_impact": 1.0069870483980912,
+          "tpr_difference": 0.028054298642533837,
+          "fpr_difference": -0.0992753623188406,
+          "average_odds_difference": -0.03561053183815338,
+          "equal_opportunity_difference": 0.028054298642533837,
+          "predictive_parity_difference": 0.22215046819502748,
+          "interpretation": {
+            "disparate_impact": "\u2713 Acceptable (r\u00e8gle des 80%)",
+            "demographic_parity": "\u2713 Bonne parit\u00e9 d\u00e9mographique",
+            "equalized_odds": "\u2713 Bonnes odds \u00e9galis\u00e9es"
+          }
+        },
+        "performance": {
+          "accuracy": 0.619,
+          "precision": 0.6700507614213198,
+          "recall": 0.8135593220338984,
+          "f1_score": 0.7348643006263048,
+          "roc_auc": 0.6104328816193223,
+          "confusion_matrix": "[[ 91 260]\n [121 528]]",
+          "true_negatives": "91",
+          "false_positives": "260",
+          "false_negatives": "121",
+          "true_positives": "528",
+          "specificity": 0.25925925925925924,
+          "sensitivity": 0.8135593220338984
+        }
+      }
+    }
+  },
+  "recommendations": [
+    {
+      "priority": "HIGH",
+      "category": "Governance",
+      "issue": "Absence de monitoring continu",
+      "recommendation": "Mettre en place un syst\u00e8me de monitoring des m\u00e9triques de fairness en production",
+      "expected_impact": "D\u00e9tection pr\u00e9coce des d\u00e9rives de fairness"
+    },
+    {
+      "priority": "MEDIUM",
+      "category": "Documentation",
+      "issue": "Documentation du mod\u00e8le incompl\u00e8te",
+      "recommendation": "Cr\u00e9er une Model Card documentant les d\u00e9cisions de fairness et les limitations",
+      "expected_impact": "Meilleure transparence et gouvernance"
+    }
+  ]
+}

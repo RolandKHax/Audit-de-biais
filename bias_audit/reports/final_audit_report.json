@@ -1,0 +1,181 @@
+{
+  "generated_at": "2026-06-16T17:56:53.969513",
+  "baseline": {
+    "performance": {
+      "accuracy": 0.658,
+      "precision": 0.6624338624338625,
+      "recall": 0.9645608628659477,
+      "f1_score": 0.7854454203262233,
+      "roc_auc": 0.6150465980974456,
+      "confusion_matrix": [
+        [
+          32,
+          319
+        ],
+        [
+          23,
+          626
+        ]
+      ],
+      "true_negatives": 32,
+      "false_positives": 319,
+      "false_negatives": 23,
+      "true_positives": 626,
+      "specificity": 0.09116809116809117,
+      "sensitivity": 0.9645608628659477
+    },
+    "fairness": {
+      "gender": {
+        "demographic_parity_difference": -0.03776079132940513,
+        "demographic_parity_ratio": 1.0409417275555235,
+        "disparate_impact": 1.0409417275555235,
+        "tpr_difference": -0.004447933019361527,
+        "fpr_difference": -0.0641688481675392,
+        "average_odds_difference": -0.034308390593450366,
+        "equal_opportunity_difference": -0.004447933019361527,
+        "predictive_parity_difference": -0.19482329892246253,
+        "interpretation": {
+          "disparate_impact": "✓ Acceptable (règle des 80%)",
+          "demographic_parity": "✓ Bonne parité démographique",
+          "equalized_odds": "✓ Bonnes odds égalisées"
+        }
+      },
+      "race": {
+        "demographic_parity_difference": 0.0345745600387235,
+        "demographic_parity_ratio": 0.9635502095862949,
+        "disparate_impact": 0.9635502095862949,
+        "tpr_difference": 0.020927601809954788,
+        "fpr_difference": 0.023035230352303482,
+        "average_odds_difference": 0.021981416081129135,
+        "equal_opportunity_difference": 0.020927601809954788,
+        "predictive_parity_difference": 0.14646061814556322,
+        "interpretation": {
+          "disparate_impact": "✓ Acceptable (règle des 80%)",
+          "demographic_parity": "✓ Bonne parité démographique",
+          "equalized_odds": "✓ Bonnes odds égalisées"
+        }
+      }
+    }
+  },
+  "mitigations": {
+    "reweighting": {
+      "performance": {
+        "accuracy": 0.646,
+        "precision": 0.6509723643807575,
+        "recall": 0.9799691833590138,
+        "f1_score": 0.7822878228782287,
+        "roc_auc": 0.6025092296278737,
+        "confusion_matrix": [
+          [
+            10,
+            341
+          ],
+          [
+            13,
+            636
+          ]
+        ],
+        "true_negatives": 10,
+        "false_positives": 341,
+        "false_negatives": 13,
+        "true_positives": 636,
+        "specificity": 0.02849002849002849,
+        "sensitivity": 0.9799691833590138
+      },
+      "fairness": {
+        "gender": {
+          "demographic_parity_difference": -0.003432041001005026,
+          "demographic_parity_ratio": 1.003520268276095,
+          "disparate_impact": 1.003520268276095,
+          "tpr_difference": 0.0011773940345368716,
+          "fpr_difference": -0.006413612565445037,
+          "average_odds_difference": -0.0026181092654540827,
+          "equal_opportunity_difference": 0.0011773940345368716,
+          "predictive_parity_difference": -0.2102722837206863,
+          "interpretation": {
+            "disparate_impact": "✓ Acceptable (règle des 80%)",
+            "demographic_parity": "✓ Bonne parité démographique",
+            "equalized_odds": "✓ Bonnes odds égalisées"
+          }
+        },
+        "race": {
+          "demographic_parity_difference": 0.009750025930920003,
+          "demographic_parity_ratio": 0.990025466893039,
+          "disparate_impact": 0.990025466893039,
+          "tpr_difference": 0.0011312217194570096,
+          "fpr_difference": 0.015447154471544766,
+          "average_odds_difference": 0.008289188095500888,
+          "equal_opportunity_difference": 0.0011312217194570096,
+          "predictive_parity_difference": 0.14714912280701753,
+          "interpretation": {
+            "disparate_impact": "✓ Acceptable (règle des 80%)",
+            "demographic_parity": "✓ Bonne parité démographique",
+            "equalized_odds": "✓ Bonnes odds égalisées"
+          }
+        }
+      }
+    },
+    "resampling": {
+      "performance": {
+        "accuracy": 0.657,
+        "precision": 0.6692477876106194,
+        "recall": 0.9322033898305084,
+        "f1_score": 0.7791371538956857,
+        "roc_auc": 0.6149544115645811,
+        "confusion_matrix": [
+          [
+            52,
+            299
+          ],
+          [
+            44,
+            605
+          ]
+        ],
+        "true_negatives": 52,
+        "false_positives": 299,
+        "false_negatives": 44,
+        "true_positives": 605,
+        "specificity": 0.14814814814814814,
+        "sensitivity": 0.9322033898305084
+      },
+      "fairness": {
+        "gender": {
+          "demographic_parity_difference": -0.04877418171051584,
+          "demographic_parity_ratio": 1.0557618868266356,
+          "disparate_impact": 1.0557618868266356,
+          "tpr_difference": -0.0063557474271759284,
+          "fpr_difference": -0.07699607329842939,
+          "average_odds_difference": -0.04167591036280266,
+          "equal_opportunity_difference": -0.0063557474271759284,
+          "predictive_parity_difference": -0.18933374635380362,
+          "interpretation": {
+            "disparate_impact": "✓ Acceptable (règle des 80%)",
+            "demographic_parity": "✓ Bonne parité démographique",
+            "equalized_odds": "✓ Bonnes odds égalisées"
+          }
+        },
+        "race": {
+          "demographic_parity_difference": 0.016440203298413003,
+          "demographic_parity_ratio": 0.9818046148547813,
+          "disparate_impact": 0.9818046148547813,
+          "tpr_difference": 0.0062217194570135526,
+          "fpr_difference": -0.012601626016260137,
+          "average_odds_difference": -0.003189953279623292,
+          "equal_opportunity_difference": 0.0062217194570135526,
+          "predictive_parity_difference": 0.15055537582227974,
+          "interpretation": {
+            "disparate_impact": "✓ Acceptable (règle des 80%)",
+            "demographic_parity": "✓ Bonne parité démographique",
+            "equalized_odds": "✓ Bonnes odds égalisées"
+          }
+        }
+      }
+    }
+  },
+  "artifacts": {
+    "executive_summary": "reports/executive_summary.txt",
+    "model_card": "reports/MODEL_CARD.md",
+    "recommendations": "reports/strategic_recommendations.txt"
+  }
+}

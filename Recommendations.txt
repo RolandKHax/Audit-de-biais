@@ -1,0 +1,14 @@
+Nom du Projet : Audit de biais d’un modèle de classification
+- But : Mesurer et atténuer biais (genre, origine) sur un modèle réel.
+- Approches : analyse de fairness metrics, reweighting et re-sampling compatibles Python 3.14; adversarial debiasing uniquement comme extension optionnelle.
+- Métriques : Demographic parity, equalized odds.
+- Livrable : Rapport + recommandations + scripts d’audit.
+
+
+Conseils pratiques pour la présentation / mini-projet
+
+- Structure diapo : motivation → méthode → résultats (tables + visuels) → limitations → extensions.
+- Code : notebook reproductible + requirements.txt / environment.yml + README clair.
+- Démonstration : 1 minute vidéo ou live demo (Gradio) multiplie l’impact.
+- Évaluation : compare toujours à un baseline simple (ex : logistic / mean predictor).
+- Ressources : Hugging Face datasets & transformers, TensorFlow Datasets, Kaggle, Papers with Code.

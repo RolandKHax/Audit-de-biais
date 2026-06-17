@@ -1,0 +1,16 @@
+Recommandations strategiques
+
+Court terme:
+- Verifier la qualite des donnees par groupe protege.
+- Comparer baseline, reweighting et resampling avant selection.
+- Documenter toute perte de performance par groupe.
+
+Moyen terme:
+- Ajouter monitoring de fairness en production.
+- Revoir les variables proxy detectees.
+- Valider les seuils de decision avec les parties prenantes.
+
+Long terme:
+- Mettre en place un registre d'audits.
+- Completer avec une revue juridique et metier.
+- Explorer des extensions avancees dans un environnement separe si necessaire.
