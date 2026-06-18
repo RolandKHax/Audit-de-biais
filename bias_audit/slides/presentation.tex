@@ -1,131 +1,430 @@
 \documentclass[aspectratio=169,11pt]{beamer}
+
+% ============================
+% PACKAGES
+% ============================
 \usepackage[utf8]{inputenc}
 \usepackage[french]{babel}
 \usepackage[T1]{fontenc}
+\usepackage{lmodern}
 \usepackage{graphicx}
 \usepackage{tikz}
 \usetikzlibrary{shapes,arrows,positioning,shadows,calc}
 \usepackage{booktabs}
 \usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{array}
+
+% ============================
+% THÈME ET COULEURS
+% ============================
 \usetheme{Madrid}
+\usecolortheme{default}
+
 \definecolor{primarycolor}{RGB}{37,99,235}
+\definecolor{primarydark}{RGB}{29,78,186}
 \definecolor{secondarycolor}{RGB}{71,85,105}
 \definecolor{successcolor}{RGB}{16,185,129}
 \definecolor{warningcolor}{RGB}{245,158,11}
 \definecolor{dangercolor}{RGB}{239,68,68}
+\definecolor{lightgray}{RGB}{241,245,249}
+\definecolor{darkbg}{RGB}{15,23,42}
+
 \setbeamercolor{palette primary}{bg=primarycolor,fg=white}
+\setbeamercolor{palette secondary}{bg=secondarycolor,fg=white}
 \setbeamercolor{structure}{fg=primarycolor}
 \setbeamercolor{frametitle}{bg=primarycolor,fg=white}
+\setbeamercolor{block title}{bg=primarycolor,fg=white}
+\setbeamercolor{block body}{bg=primarycolor!8,fg=black}
+\setbeamercolor{block title example}{bg=successcolor!90,fg=white}
+\setbeamercolor{block body example}{bg=successcolor!10,fg=black}
+\setbeamercolor{block title alerted}{bg=warningcolor!90,fg=white}
+\setbeamercolor{block body alerted}{bg=warningcolor!10,fg=black}
+\setbeamercolor{normal text}{fg=darkbg}
+
 \setbeamertemplate{navigation symbols}{}
 \setbeamertemplate{footline}[frame number]
+\setbeamertemplate{itemize items}[circle]
+\setbeamertemplate{enumerate items}[default]
+\setbeamertemplate{blocks}[rounded][shadow=false]
 
+% ============================
+% MACROS VISUELLES
+% ============================
+\newcommand{\metriccard}[3]{%
+\begin{tikzpicture}
+\node[rounded corners=5pt, draw=#1, fill=#1!10, minimum width=3.1cm, minimum height=1.45cm, align=center] {
+{\Large\bfseries\textcolor{#1}{#2}}\\[-1pt]
+{\scriptsize\textcolor{secondarycolor}{#3}}
+};
+\end{tikzpicture}
+}
+
+\newcommand{\sectiontransition}[3]{%
+\begin{frame}[plain]
+\begin{tikzpicture}[remember picture,overlay]
+  \fill[#3!8] (current page.south west) rectangle (current page.north east);
+  \fill[#3] (current page.south west) rectangle ([xshift=1.25cm]current page.north west);
+  \node[anchor=west, text=white, rotate=90, font=\bfseries\Large]
+    at ([xshift=.63cm,yshift=-4.25cm]current page.north west) {PARTIE #1};
+\end{tikzpicture}
+\vspace{1.2cm}
+\begin{center}
+{\Huge\textcolor{#3}{\textbf{Partie #1}}}\\[0.35cm]
+{\LARGE\textcolor{secondarycolor}{#2}}\\[0.7cm]
+\begin{tikzpicture}
+  \fill[#3!25] (0,0) circle (1.65cm);
+  \fill[#3] (0,0) circle (1.22cm);
+  \node[white, font=\Huge\bfseries] at (0,0) {#1};
+\end{tikzpicture}
+\end{center}
+\end{frame}
+}
+
+% ============================
+% INFORMATIONS DU DOCUMENT
+% ============================
 \title[Audit de biais COMPAS]{\LARGE\bfseries Audit de biais d'un modèle de classification}
-\subtitle{Étude du dataset COMPAS ProPublica}
+\subtitle{Étude complète du dataset COMPAS ProPublica}
 \institute{Filière Intelligence Artificielle et Cybersécurité}
-\author{\textbf{Réalisé par :} À renseigner\\\textbf{Encadré par :} À renseigner}
-\date{\today}
-\titlegraphic{\IfFileExists{ensabm.png}{\includegraphics[height=1.5cm]{ensabm.png}}{}}
+\author[KPADENOU Kossi Roland]{\textbf{Réalisé par :} KPADENOU Kossi Roland}
+\date{Juin 2026}
 
+\setbeamertemplate{title page}
+{
+  \begin{tikzpicture}[remember picture,overlay]
+    \fill[darkbg] (current page.south west) rectangle (current page.north east);
+    \fill[primarycolor] (current page.south west) rectangle ([xshift=1.15cm]current page.north west);
+    \fill[primarycolor!22] ([xshift=1.15cm]current page.south west) rectangle ([xshift=1.42cm]current page.north west);
+    \node[anchor=south east, opacity=.08, font=\bfseries\fontsize{96}{96}\selectfont, text=white]
+      at ([xshift=-.4cm,yshift=.2cm]current page.south east) {COMPAS};
+  \end{tikzpicture}
+  \vspace{1.1cm}
+  \begin{flushleft}
+  \hspace{1.35cm}
+  \begin{minipage}{0.78\textwidth}
+    {\color{primarycolor}\rule{0.42\linewidth}{1.5pt}}\\[0.35cm]
+    {\color{white}\Huge\bfseries Audit de biais d'un modèle de classification}\\[0.35cm]
+    {\color{primarycolor!35}\Large Étude complète du dataset COMPAS ProPublica}\\[0.6cm]
+    {\color{white!80}\normalsize Performance, fairness, mitigation et recommandations}\\[1.1cm]
+    {\color{white}\large\textbf{KPADENOU Kossi Roland}}\\[0.15cm]
+    {\color{white!65}\small Filière Intelligence Artificielle et Cybersécurité -- Juin 2026}
+  \end{minipage}
+  \end{flushleft}
+}
+
+% ============================
+% DOCUMENT
+% ============================
 \begin{document}
-\begin{frame}[plain]\titlepage\end{frame}
-\begin{frame}{Sommaire}\tableofcontents\end{frame}
 
+\begin{frame}[plain]
+\titlepage
+\end{frame}
+
+\begin{frame}{Sommaire}
+\tableofcontents
+\end{frame}
+
+% ============================
+% SECTION 1
+% ============================
 \section{Contexte}
-\begin{frame}{Problématique}
+\sectiontransition{1}{Contexte et problématique}{primarycolor}
+
+\begin{frame}{Pourquoi auditer un modèle ?}
 \begin{block}{Question centrale}
-Le modèle prend-il des décisions équitables entre groupes sensibles, et comment réduire les disparités sans détruire la performance ?
+Un modèle qui prédit correctement en moyenne est-il forcément juste pour tous les groupes ?
 \end{block}
+
+\vspace{0.35cm}
+\begin{columns}[T]
+\column{0.48\textwidth}
+\textbf{\textcolor{primarycolor}{Performance}}
 \begin{itemize}
-\item Cas réel : prédiction de récidive à deux ans.
-\item Attributs audités : \texttt{race} et \texttt{sex}.
-\item Risque majeur : faux positifs différenciés selon les groupes.
+  \item Accuracy
+  \item F1-score
+  \item ROC-AUC
+  \item Qualité moyenne du modèle
 \end{itemize}
+
+\column{0.48\textwidth}
+\textbf{\textcolor{dangercolor}{Fairness}}
+\begin{itemize}
+  \item Erreurs par groupe
+  \item Faux positifs différenciés
+  \item TPR/FPR par attribut sensible
+  \item Impact humain des décisions
+\end{itemize}
+\end{columns}
 \end{frame}
 
 \begin{frame}{Dataset COMPAS}
+\begin{columns}[T]
+\column{0.56\textwidth}
 \begin{itemize}
-\item Source : ProPublica, \texttt{compas-scores-two-years.csv}.
-\item Cible : \texttt{two\_year\_recid}.
-\item Variables : âge, antécédents, type d'accusation, score COMPAS.
-\item Limite : les labels judiciaires ne sont pas une vérité sociale neutre.
+  \item Source : ProPublica, fichier réel \texttt{compas-scores-two-years.csv}.
+  \item Cible : \texttt{two\_year\_recid}, récidive observée à deux ans.
+  \item Attributs audités : \texttt{race} et \texttt{sex}.
+  \item Taille après nettoyage : \textbf{6172 observations}.
+  \item Usage : audit pédagogique, pas décision judiciaire automatisée.
 \end{itemize}
+
+\column{0.38\textwidth}
+\begin{alertblock}{Point éthique}
+Le label judiciaire n'est pas une vérité neutre : il peut refléter des biais de mesure, d'observation ou de procédure.
+\end{alertblock}
+\end{columns}
 \end{frame}
 
+% ============================
+% SECTION 2
+% ============================
 \section{Méthodologie}
+\sectiontransition{2}{Méthodologie expérimentale}{warningcolor}
+
 \begin{frame}{Pipeline expérimental}
-\begin{enumerate}
-\item Nettoyage COMPAS et EDA orientée biais.
-\item Split train/validation/test stratifié.
-\item Baselines : Logistic Regression, Random Forest, MLP.
-\item Audit : DP, DI, EO, TPR/FPR, selection rate.
-\item Mitigation : reweighting, resampling, Fairlearn, PyTorch adversarial, seuils.
-\end{enumerate}
+\begin{center}
+\begin{tikzpicture}[
+  node distance=.55cm,
+  box/.style={rectangle, rounded corners, draw=primarycolor, fill=primarycolor!10,
+              minimum width=2.65cm, minimum height=.78cm, align=center, font=\scriptsize\bfseries},
+  arrow/.style={->, thick, primarycolor}
+]
+\node[box] (raw) {COMPAS brut};
+\node[box, right=of raw] (prep) {Préprocessing};
+\node[box, right=of prep] (split) {Train / Val / Test};
+\node[box, right=of split] (models) {3 modèles};
+\node[box, below=of models] (metrics) {Métriques};
+\node[box, left=of metrics] (mit) {Mitigation};
+\node[box, left=of mit] (report) {Rapport final};
+\draw[arrow] (raw) -- (prep);
+\draw[arrow] (prep) -- (split);
+\draw[arrow] (split) -- (models);
+\draw[arrow] (models) -- (metrics);
+\draw[arrow] (metrics) -- (mit);
+\draw[arrow] (mit) -- (report);
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.35cm}
+\begin{exampleblock}{Robustesse}
+Les expériences sont répétées avec les seeds 0, 1, 2, 3 et 4 pour éviter de tirer une conclusion sur un seul hasard.
+\end{exampleblock}
 \end{frame}
 
-\begin{frame}{Pourquoi garder les attributs sensibles ?}
-\begin{alertblock}{Point critique}
-Retirer \texttt{race} ou \texttt{sex} des features ne prouve pas l'absence de biais : d'autres variables peuvent agir comme proxys.
+\begin{frame}{Modèles et métriques}
+\begin{columns}[T]
+\column{0.48\textwidth}
+\textbf{\textcolor{primarycolor}{Modèles comparés}}
+\begin{itemize}
+  \item Logistic Regression
+  \item Random Forest
+  \item MLP
+  \item Avec et sans attributs sensibles
+\end{itemize}
+
+\column{0.48\textwidth}
+\textbf{\textcolor{successcolor}{Métriques suivies}}
+\begin{itemize}
+  \item Accuracy, précision, rappel, F1
+  \item ROC-AUC
+  \item Demographic parity
+  \item Equalized odds
+  \item TPR/FPR par groupe
+\end{itemize}
+\end{columns}
+
+\vspace{0.4cm}
+\begin{alertblock}{Erreur fréquente}
+Retirer \texttt{race} ou \texttt{sex} des features ne suffit pas : des variables proxy peuvent porter une partie de l'information.
 \end{alertblock}
 \end{frame}
 
+% ============================
+% SECTION 3
+% ============================
 \section{Résultats}
-\begin{frame}{Performance baseline}
+\sectiontransition{3}{Résultats baseline}{successcolor}
+
+\begin{frame}{Performance globale}
 \begin{center}
-\begin{tabular}{lr}
-\toprule
-Métrique & Valeur \\
-\midrule
-Accuracy & 0.692 \\
-F1-score & 0.625 \\
-ROC-AUC & 0.751 \\
-Baseline & \texttt{logistic\_regression} \\
-\bottomrule
-\end{tabular}
+\metriccard{primarycolor}{0.692}{Accuracy baseline}
+\hspace{0.35cm}
+\metriccard{successcolor}{0.625}{F1-score}
+\hspace{0.35cm}
+\metriccard{warningcolor}{0.751}{ROC-AUC}
 \end{center}
+
+\vspace{0.55cm}
+\begin{block}{Lecture}
+La baseline prédit correctement une majorité de cas, mais ces scores ne disent pas encore si les erreurs sont réparties équitablement entre groupes.
+\end{block}
 \end{frame}
 
 \begin{frame}{Fairness baseline}
 \begin{center}
-\begin{tabular}{lrr}
+\begin{tabular}{lrrr}
 \toprule
-Attribut & EO diff & DP diff \\
+\textbf{Attribut} & \textbf{DP diff} & \textbf{EO diff} & \textbf{FPR diff} \\
 \midrule
-race & 0.652 & 0.495 \\
-sex & 0.117 & 0.131 \\
+race & \cellcolor{dangercolor!20}0.495 & \cellcolor{dangercolor!20}0.652 & \cellcolor{dangercolor!20}0.313 \\
+sex & \cellcolor{warningcolor!20}0.131 & \cellcolor{warningcolor!15}0.117 & \cellcolor{successcolor!20}0.046 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.4cm}
+\begin{alertblock}{Signal principal}
+Les écarts les plus préoccupants apparaissent sur \texttt{race}, surtout pour Equalized Odds et les faux positifs.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Lecture par groupe}
+\begin{center}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Groupe} & \textbf{n} & \textbf{Selection} & \textbf{TPR} & \textbf{FPR} \\
+\midrule
+African-American & 467 & 0.495 & 0.652 & \cellcolor{dangercolor!20}0.313 \\
+Caucasian & 319 & 0.235 & 0.421 & 0.121 \\
+Female & 160 & 0.256 & 0.460 & 0.164 \\
+Male & 766 & 0.388 & 0.577 & 0.210 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.35cm}
+\begin{block}{En mots simples}
+Le modèle classe beaucoup plus souvent certains groupes en risque positif, et il produit davantage de faux positifs sur certains groupes.
+\end{block}
+\end{frame}
+
+\begin{frame}{Visualisations clés}
+\begin{columns}[T]
+\column{0.49\textwidth}
+\centering
+\IfFileExists{../reports/figures/eda_demographics.png}{\includegraphics[width=\textwidth]{../reports/figures/eda_demographics.png}}{}
+
+\column{0.49\textwidth}
+\centering
+\IfFileExists{../reports/figures/debiasing_comparison.png}{\includegraphics[width=\textwidth]{../reports/figures/debiasing_comparison.png}}{}
+\end{columns}
+\end{frame}
+
+% ============================
+% SECTION 4
+% ============================
+\section{Mitigation}
+\sectiontransition{4}{Réduction des biais}{dangercolor}
+
+\begin{frame}{Méthodes testées}
+\begin{columns}[T]
+\column{0.5\textwidth}
+\begin{itemize}
+  \item \textbf{Reweighting} : pondérer les exemples.
+  \item \textbf{Resampling} : rééquilibrer les couples groupe/label.
+  \item \textbf{Fairlearn} : entraîner sous contrainte de fairness.
+\end{itemize}
+
+\column{0.5\textwidth}
+\begin{itemize}
+  \item \textbf{Adversarial PyTorch} : cacher l'attribut sensible dans la représentation.
+  \item \textbf{Seuils par groupe} : ajuster la décision après entraînement.
+\end{itemize}
+\end{columns}
+
+\vspace{0.4cm}
+\begin{alertblock}{Attention}
+Une mitigation doit être jugée sur deux axes : baisse du biais et maintien d'une performance utile.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Compromis performance / fairness}
+\begin{center}
+\begin{tabular}{llrrr}
+\toprule
+\textbf{Attribut} & \textbf{Méthode} & \textbf{Acc.} & \textbf{F1} & \textbf{EO diff} \\
+\midrule
+race & baseline & 0.692 & 0.625 & \cellcolor{dangercolor!20}0.652 \\
+race & fairlearn EO & 0.548 & 0.336 & \cellcolor{successcolor!20}0.276 \\
+race & adversarial $\lambda=1.0$ & 0.691 & 0.589 & \cellcolor{warningcolor!20}0.596 \\
+sex & baseline & 0.692 & 0.625 & 0.117 \\
+sex & fairlearn EO & 0.668 & 0.620 & \cellcolor{successcolor!20}0.074 \\
+sex & adversarial $\lambda=1.0$ & 0.643 & 0.673 & \cellcolor{successcolor!20}0.057 \\
 \bottomrule
 \end{tabular}
 \end{center}
 \end{frame}
 
-\begin{frame}{Visualisations}
-\IfFileExists{../reports/figures/eda_demographics.png}{\includegraphics[width=.48\textwidth]{../reports/figures/eda_demographics.png}}{}
-\IfFileExists{../reports/figures/debiasing_comparison.png}{\includegraphics[width=.48\textwidth]{../reports/figures/debiasing_comparison.png}}{}
+% ============================
+% SECTION 5
+% ============================
+\section{Recommandations}
+\sectiontransition{5}{Recommandations et limites}{secondarycolor}
+
+\begin{frame}{Recommandations principales}
+\begin{enumerate}
+  \item Ne jamais conclure avec l'accuracy seule.
+  \item Publier les métriques par groupe : TPR, FPR, selection rate, precision.
+  \item Prioriser Equalized Odds pour les contextes où les erreurs ont un impact humain.
+  \item Garder une supervision humaine et une procédure de contestation.
+  \item Documenter les limites du dataset COMPAS et des seuils utilisés.
+\end{enumerate}
 \end{frame}
 
-\section{Mitigation}
-\begin{frame}{Méthodes comparées}
+\begin{frame}{Limites}
+\begin{columns}[T]
+\column{0.48\textwidth}
+\textbf{\textcolor{dangercolor}{Données}}
 \begin{itemize}
-\item \textbf{Reweighting} : pondération par couples groupe/label.
-\item \textbf{Resampling} : équilibrage des sous-groupes.
-\item \textbf{Fairlearn} : contraintes demographic parity/equalized odds.
-\item \textbf{Adversarial PyTorch} : représentation moins informative sur l'attribut sensible.
-\item \textbf{Post-processing} : seuils par groupe, à discuter éthiquement.
+  \item Labels judiciaires imparfaits
+  \item Groupes minoritaires très petits
+  \item Corrélations et proxys
 \end{itemize}
-\end{frame}
 
-\begin{frame}{Recommandations}
+\column{0.48\textwidth}
+\textbf{\textcolor{warningcolor}{Méthodes}}
 \begin{itemize}
-\item Ne jamais se limiter à l'accuracy globale.
-\item Auditer systématiquement TPR/FPR par groupe.
-\item Privilégier equalized odds pour les erreurs en contexte judiciaire.
-\item Documenter les limites COMPAS et surveiller la dérive après déploiement.
+  \item Fairness multiple et parfois incompatible
+  \item Mitigation parfois coûteuse en performance
+  \item Pas de preuve causale
 \end{itemize}
+\end{columns}
 \end{frame}
 
+% ============================
+% SECTION 6
+% ============================
 \section{Conclusion}
-\begin{frame}{Conclusion}
-\begin{exampleblock}{Message clé}
-Un modèle peut être statistiquement utile et socialement problématique. L'audit doit donc combiner performance, fairness, mitigation et gouvernance.
+\sectiontransition{6}{Conclusion}{primarycolor}
+
+\begin{frame}{Message final}
+\begin{exampleblock}{Conclusion}
+Un modèle peut être statistiquement utile et socialement risqué. L'audit doit donc répondre à deux questions : \textbf{est-ce que le modèle prédit bien ?} et \textbf{pour qui se trompe-t-il le plus ?}
 \end{exampleblock}
+
+\vspace{0.45cm}
+\begin{center}
+\begin{tikzpicture}
+\node[rounded corners=6pt, fill=darkbg, text=white, minimum width=10.5cm, minimum height=1.1cm, align=center] {
+\Large\bfseries Performance + Fairness + Gouvernance = IA responsable
+};
+\end{tikzpicture}
+\end{center}
 \end{frame}
+
+\begin{frame}[plain]
+\begin{tikzpicture}[remember picture,overlay]
+  \fill[darkbg] (current page.south west) rectangle (current page.north east);
+  \fill[primarycolor] (current page.south west) rectangle ([xshift=1.15cm]current page.north west);
+\end{tikzpicture}
+\vspace{2.2cm}
+\begin{center}
+{\Huge\textcolor{white}{\textbf{Merci}}}\\[0.5cm]
+{\Large\textcolor{primarycolor!35}{Questions / discussion}}\\[1cm]
+{\large\textcolor{white!75}{KPADENOU Kossi Roland}}
+\end{center}
+\end{frame}
+
 \end{document}

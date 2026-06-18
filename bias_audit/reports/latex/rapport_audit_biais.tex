@@ -1,119 +1,645 @@
+%================================================================
+% RAPPORT - Audit de biais d'un modèle de classification
+% Charte reprise du Template_Rapport.tex fourni
+%================================================================
 \documentclass[12pt,a4paper]{report}
+
+% ============================
+% PACKAGES
+% ============================
 \usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
 \usepackage[french]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
 \usepackage{geometry}
-\geometry{a4paper, top=2.5cm, bottom=2.5cm, left=3cm, right=2.5cm, headheight=15pt}
 \usepackage{graphicx}
 \usepackage{fancyhdr}
 \usepackage{titlesec}
 \usepackage{hyperref}
 \usepackage{xcolor}
-\usepackage{booktabs}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{tabularx}
 \usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{booktabs}
 \usepackage{array}
 \usepackage{float}
+\usepackage{tikz}
+\usetikzlibrary{positioning,shapes,arrows,calc}
 \usepackage[most]{tcolorbox}
-\usepackage{amsmath,amssymb}
+\usepackage{microtype}
+\usepackage{multicol}
+\usepackage{colortbl}
 
+% ============================
+% CONFIGURATION PAGE
+% ============================
+\geometry{a4paper, top=2.5cm, bottom=2.5cm, left=3cm, right=2.5cm, headheight=25pt}
+
+% ============================
+% COULEURS
+% ============================
 \definecolor{primarycolor}{RGB}{37,99,235}
 \definecolor{primarydark}{RGB}{29,78,186}
 \definecolor{primarylight}{RGB}{219,234,254}
 \definecolor{secondarycolor}{RGB}{100,116,139}
 \definecolor{warningcolor}{RGB}{245,158,11}
+\definecolor{warninglight}{RGB}{254,243,199}
 \definecolor{successcolor}{RGB}{16,185,129}
+\definecolor{successlight}{RGB}{209,250,229}
 \definecolor{dangercolor}{RGB}{239,68,68}
+\definecolor{dangerlight}{RGB}{254,226,226}
+\definecolor{darkbg}{RGB}{15,23,42}
+\definecolor{codebg}{RGB}{248,250,252}
+\definecolor{infobg}{RGB}{240,249,255}
+\definecolor{infoborder}{RGB}{186,230,253}
+\definecolor{riskCritical}{RGB}{192,0,0}
+\definecolor{riskHigh}{RGB}{230,60,40}
+\definecolor{riskMedium}{RGB}{242,113,28}
+\definecolor{riskLow}{RGB}{0,112,60}
 
-\hypersetup{colorlinks=true, linkcolor=primarycolor, urlcolor=primarydark, citecolor=primarycolor,
-pdftitle={Audit de biais COMPAS}, pdfauthor={A renseigner}}
+% ============================
+% HYPERLINKS
+% ============================
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primarycolor,
+    urlcolor=primarydark,
+    citecolor=primarycolor,
+    pdftitle={Audit de biais d'un modèle de classification - COMPAS},
+    pdfauthor={KPADENOU Kossi Roland}
+}
 
+% ============================
+% HEADERS & FOOTERS
+% ============================
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\small\color{secondarycolor}\leftmark}
-\fancyhead[R]{\small\color{secondarycolor}ENSA Béni Mellal}
+\fancyhead[R]{\small\color{secondarycolor}Audit de biais COMPAS}
 \fancyfoot[C]{\color{secondarycolor}\small\thepage}
-\fancyfoot[R]{\color{secondarycolor}\small Audit de biais}
+\fancyfoot[R]{\color{secondarycolor}\small KPADENOU Kossi Roland}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\renewcommand{\headrule}{%
+  \hbox to\headwidth{\color{primarycolor}\leaders\hrule height\headrulewidth\hfill}}
+\renewcommand{\footrule}{%
+  \hbox to\headwidth{\color{primarycolor!30}\leaders\hrule height\footrulewidth\hfill}}
 
-\titleformat{\chapter}[display]{\normalfont\huge\bfseries}{\color{primarycolor}\chaptertitlename\ \thechapter}{16pt}{\color{primarydark}\Huge\bfseries}
-\titleformat{\section}{\normalfont\Large\bfseries\color{primarycolor}}{\thesection}{1em}{}[\color{primarycolor!40}\titlerule]
-\titleformat{\subsection}{\normalfont\large\bfseries\color{primarydark}}{\thesubsection}{1em}{}
+% ============================
+% STYLE CHAPITRES
+% ============================
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries}
+  {\color{primarycolor}\chaptertitlename\ \thechapter}{16pt}
+  {\color{primarydark}\Huge\bfseries}
+\titlespacing*{\chapter}{0pt}{-20pt}{30pt}
 
-\tcbset{mybox/.style={enhanced, arc=4pt, boxrule=0.8pt, left=8pt, right=8pt, top=6pt, bottom=6pt},
-summarybox/.style={mybox, colback=primarylight, colframe=primarycolor},
-warningbox/.style={mybox, colback=warningcolor!15, colframe=warningcolor},
-successbox/.style={mybox, colback=successcolor!12, colframe=successcolor}}
-\newtcolorbox{warningbox}{warningbox}
-\newtcolorbox{summaryinfobox}{summarybox}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{primarycolor}}
+  {\thesection}{1em}{}[\color{primarycolor!40}\titlerule]
 
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{primarydark}}
+  {\thesubsection}{1em}{}
+
+% ============================
+% TCOLORBOX STYLES
+% ============================
+\tcbset{
+  mybase/.style={
+    enhanced, arc=4pt, boxrule=0.8pt,
+    left=8pt, right=8pt, top=6pt, bottom=6pt,
+    fonttitle=\bfseries\small,
+  },
+  primarybox/.style={
+    mybase,
+    colback=primarylight, colframe=primarycolor,
+    colbacktitle=primarycolor, coltitle=white,
+  },
+  successbox/.style={
+    mybase,
+    colback=successlight, colframe=successcolor,
+    colbacktitle=successcolor, coltitle=white,
+  },
+  warningbox/.style={
+    mybase,
+    colback=warninglight, colframe=warningcolor,
+    colbacktitle=warningcolor, coltitle=white,
+  },
+  dangerbox/.style={
+    mybase,
+    colback=dangerlight, colframe=dangercolor,
+    colbacktitle=dangercolor, coltitle=white,
+  },
+  infobox/.style={
+    enhanced, arc=3pt, boxrule=0.6pt,
+    colback=infobg, colframe=infoborder,
+    left=8pt, right=8pt, top=5pt, bottom=5pt,
+    borderline west={3pt}{0pt}{primarycolor},
+  },
+  codebox/.style={
+    enhanced, arc=4pt, boxrule=0.5pt,
+    colback=codebg, colframe=secondarycolor!40,
+    left=8pt, right=8pt, top=4pt, bottom=4pt,
+  },
+  summarybox/.style={
+    enhanced, arc=6pt, boxrule=0pt,
+    colback=darkbg, colframe=darkbg,
+    colupper=white,
+    left=12pt, right=12pt, top=10pt, bottom=10pt,
+  },
+}
+
+% ============================
+% LISTINGS (CODE)
+% ============================
+\lstdefinestyle{pythonstyle}{
+    language=Python,
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    keywordstyle=\color{primarycolor}\bfseries,
+    commentstyle=\color{successcolor}\itshape,
+    stringstyle=\color{dangercolor},
+    numbers=left,
+    numberstyle=\tiny\color{secondarycolor},
+    numbersep=8pt,
+    showstringspaces=false,
+    tabsize=4,
+    frame=none,
+    backgroundcolor=\color{codebg},
+    aboveskip=0pt,
+    belowskip=0pt,
+}
+
+% ============================
+% COMMANDES UTILITAIRES
+% ============================
+\newcommand{\checkitem}{\textcolor{successcolor}{$\checkmark$}\ }
+\newcommand{\warnitem}{\textcolor{warningcolor}{$\triangle$}\ }
+\newcommand{\crossitem}{\textcolor{dangercolor}{$\times$}\ }
+\newcommand{\badge}[2]{%
+  \tcbox[on line, arc=3pt, boxsep=0pt, left=4pt, right=4pt,
+    top=1pt, bottom=1pt, colback=#1!15, colframe=#1,
+    boxrule=0.5pt, fontupper=\tiny\bfseries\color{#1}]{#2}%
+}
+\renewcommand{\arraystretch}{1.35}
+\setlist[itemize]{leftmargin=*, itemsep=2pt}
+\setlist[enumerate]{leftmargin=*, itemsep=2pt}
+
+% ============================
+% DOCUMENT
+% ============================
 \begin{document}
+\hypersetup{pageanchor=false}
+
+% ============================
+% PAGE DE GARDE
+% ============================
 \begin{titlepage}
-\thispagestyle{empty}
-\begin{center}
-\IfFileExists{ensabm.png}{\includegraphics[height=3cm]{ensabm.png}}{\fbox{\Large Logo ENSA à renseigner}}
-\vspace{2.5cm}
-\begin{tcolorbox}[summarybox]
-\centering
-{\large MINI-PROJET -- 2025/2026}\\[8pt]
-{\Huge\bfseries Audit de biais d'un modèle de classification}\\[8pt]
-{\Large Étude du dataset COMPAS ProPublica}\\[12pt]
-Module : Deep Learning / Fairness algorithmique
-\end{tcolorbox}
-\vspace{2cm}
-\begin{tabular}{ll}
-\textbf{Réalisé par :} & À renseigner \\
-\textbf{Encadré par :} & À renseigner \\
-\textbf{Filière :} & Intelligence Artificielle et Cybersécurité \\
-\textbf{Année universitaire :} & 2025--2026
-\end{tabular}
-\end{center}
+  \thispagestyle{empty}
+
+  \vspace*{1.2cm}
+  \begin{center}
+  \begin{minipage}{0.95\textwidth}
+    \begin{tcolorbox}[
+      enhanced, arc=6pt,
+      colback=white, colframe=primarycolor,
+      boxrule=1.5pt, left=20pt, right=20pt, top=18pt, bottom=18pt
+    ]
+      \centering
+      {\color{secondarycolor}\small\textbf{PROJET FINAL -- 2025/2026}}\\[8pt]
+      {\color{primarydark}\huge\bfseries Audit de biais d'un modèle de classification}\\[12pt]
+      {\color{primarycolor}\Large\bfseries Étude complète du dataset COMPAS ProPublica}\\[14pt]
+      \color{primarycolor}\rule{0.7\linewidth}{1.5pt}\\[12pt]
+      {\color{secondarycolor}\normalsize Module : Deep Learning / Fairness algorithmique}\\[2pt]
+      {\color{secondarycolor}\normalsize Filière : Intelligence Artificielle et Cybersécurité}
+    \end{tcolorbox}
+  \end{minipage}
+
+  \vspace{2cm}
+  \begin{minipage}{0.85\textwidth}
+    \begin{tcolorbox}[
+      enhanced, arc=5pt, colback=codebg,
+      colframe=secondarycolor!30, boxrule=0.6pt,
+      left=20pt, right=20pt, top=12pt, bottom=12pt
+    ]
+      \begin{tabular}{@{}ll}
+        \color{secondarycolor}\small\textbf{Réalisé par} &
+          \color{primarydark}\small KPADENOU Kossi Roland \\[6pt]
+        \color{secondarycolor}\small\textbf{Dépôt Git} &
+          \color{primarydark}\small\texttt{git@github.com:RolandKHax/} \\
+        & \color{primarydark}\small\texttt{Audit-de-biais.git} \\[6pt]
+        \color{secondarycolor}\small\textbf{Année universitaire} &
+          \color{primarydark}\small 2025--2026 \\
+      \end{tabular}
+    \end{tcolorbox}
+  \end{minipage}
+
+  \vfill
+  {\color{secondarycolor}\large Juin 2026}
+  \end{center}
 \end{titlepage}
+\clearpage
+\hypersetup{pageanchor=true}
+\pagenumbering{roman}
 
-\chapter*{Résumé exécutif}
-\addcontentsline{toc}{chapter}{Résumé exécutif}
-\begin{summaryinfobox}
-Ce rapport audite un modèle de classification binaire appliqué au dataset COMPAS de ProPublica. L'objectif est de mesurer et d'atténuer les disparités liées à l'origine (\texttt{race}) et au genre (\texttt{sex}) avec des métriques de fairness : demographic parity, disparate impact, equalized odds, TPR/FPR et selection rate par groupe.
-\end{summaryinfobox}
+% ============================
+% RÉSUMÉ
+% ============================
+\chapter*{Résumé}
+\addcontentsline{toc}{chapter}{Résumé}
+\markboth{Résumé}{Résumé}
+\thispagestyle{fancy}
 
-Le dataset traité contient \textbf{6172 observations} et \textbf{12 variables}. La baseline principale est \texttt{logistic\_regression}, politique \texttt{without\_sensitive}, seed 0. Ses scores sont : accuracy=0.692, F1=0.625, ROC-AUC=0.751.
+\begin{tcolorbox}[summarybox]
+\large
+Ce rapport explique, étape par étape, comment auditer les biais d'un modèle de classification sur le dataset réel \textbf{COMPAS} publié par ProPublica. L'objectif n'est pas seulement d'obtenir un modèle performant : il faut aussi comprendre si ses erreurs touchent certains groupes plus que d'autres.
+\end{tcolorbox}
 
+\vspace{0.8em}
+
+\begin{tcolorbox}[successbox, title={Ce qui a été réalisé}]
+\begin{itemize}
+  \item Utilisation du dataset réel \texttt{compas-scores-two-years.csv}, avec \textbf{6172 lignes} après nettoyage.
+  \item Étude des attributs sensibles \texttt{race} et \texttt{sex}.
+  \item Entraînement de trois familles de modèles : régression logistique, forêt aléatoire et MLP.
+  \item Comparaison des modèles avec et sans attributs sensibles dans les variables d'entrée.
+  \item Mesure de la performance classique : accuracy, précision, rappel, F1-score et ROC-AUC.
+  \item Mesure de la fairness : demographic parity, disparate impact, equalized odds, equal opportunity, TPR, FPR et selection rate.
+  \item Tests de mitigation : reweighting, resampling, Fairlearn, seuils par groupe et adversarial debiasing avec PyTorch.
+  \item Production de scripts, notebooks, tableaux, figures, rapport PDF et présentation PDF.
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[infobox]
+\textbf{Idée simple :} un modèle peut avoir une bonne note globale et rester injuste. Par exemple, si deux groupes obtiennent presque la même accuracy mais qu'un groupe reçoit beaucoup plus de faux positifs, le modèle peut créer une injustice concrète.
+\end{tcolorbox}
+
+\begin{tcolorbox}[warningbox, title={Conclusion en une phrase}]
+Sur COMPAS, la performance globale est correcte, mais les écarts de fairness sur \texttt{race} sont importants : il ne faut donc pas déployer ce type de modèle sans audit, documentation, supervision humaine et suivi régulier.
+\end{tcolorbox}
+
+% ============================
+% TABLES
+% ============================
 \tableofcontents
+\addcontentsline{toc}{chapter}{Table des matières}
 \listoffigures
+\addcontentsline{toc}{chapter}{Liste des figures}
 \listoftables
+\addcontentsline{toc}{chapter}{Liste des tableaux}
+\clearpage
 
-\chapter{Introduction}
-Les modèles de classification utilisés dans des contextes sensibles peuvent être performants globalement tout en produisant des erreurs inégalement distribuées entre groupes. Dans COMPAS, la décision étudiée est la prédiction de récidive à deux ans. Les faux positifs sont particulièrement critiques : ils peuvent correspondre à des personnes prédites à risque alors qu'elles ne récidivent pas.
+% ============================
+% INTRODUCTION GÉNÉRALE
+% ============================
+\chapter*{Introduction générale}
+\addcontentsline{toc}{chapter}{Introduction générale}
+\markboth{Introduction générale}{Introduction générale}
 
-\chapter{État de l'art}
-\section{Fairness algorithmique}
-La fairness n'a pas une définition unique. La parité démographique impose des taux de sélection comparables, tandis qu'equalized odds exige des taux d'erreur comparables, notamment TPR et FPR.
-\[
-P(\hat{Y}=1 \mid A=a) = P(\hat{Y}=1 \mid A=b)
-\]
-\[
-TPR_a \approx TPR_b \quad \text{et} \quad FPR_a \approx FPR_b
-\]
+\begin{tcolorbox}[summarybox]
+\centering\large\bfseries
+La question centrale du projet :\\
+un modèle qui prédit bien est-il forcément un modèle juste ?
+\end{tcolorbox}
 
-\section{Mitigation}
-Le projet compare des méthodes de pré-processing (reweighting, resampling), d'in-processing (Fairlearn reductions, adversarial debiasing PyTorch) et de post-processing (seuils par groupe).
+\section*{Pourquoi ce sujet est important}
 
-\chapter{Données COMPAS}
-Le dataset principal est \texttt{compas-scores-two-years.csv}. Les variables centrales sont \texttt{two\_year\_recid} pour la cible, \texttt{race} et \texttt{sex} pour l'audit, ainsi que \texttt{age}, \texttt{priors\_count}, \texttt{c\_charge\_degree} et les scores COMPAS.
+Les modèles de classification sont utilisés pour prendre ou aider à prendre des décisions : accepter un crédit, détecter une fraude, recommander un traitement, classer un dossier, estimer un risque. Dans un exercice classique de machine learning, on regarde surtout si le modèle prédit correctement. On calcule alors une accuracy, un F1-score ou une ROC-AUC.
 
-\begin{warningbox}
-COMPAS est un cas réel à fort impact humain. Le rapport ne prétend pas que le label soit une vérité neutre : il peut contenir des biais de mesure, de collecte ou de procédure judiciaire.
-\end{warningbox}
+Mais dans un contexte humain sensible, cela ne suffit pas. Imaginons deux groupes de personnes. Si le modèle se trompe rarement sur le premier groupe mais souvent sur le second, la moyenne globale peut cacher un vrai problème. Le modèle peut sembler bon sur le papier tout en créant une différence de traitement.
 
-\chapter{Analyse exploratoire orientée biais}
-\IfFileExists{../figures/eda_demographics.png}{\begin{figure}[H]\centering\includegraphics[width=.9\textwidth]{../figures/eda_demographics.png}\caption{Distribution des labels par attribut sensible}\end{figure}}{}
+\section*{Pourquoi COMPAS}
 
-\chapter{Méthodologie}
-Le protocole utilise un split train/validation/test stratifié par label et attributs sensibles quand les effectifs le permettent. Les expériences sont répétées avec les seeds 0, 1, 2, 3 et 4. Les variables sensibles sont conservées pour l'audit, même lorsqu'elles sont retirées des features du modèle.
+COMPAS est un outil utilisé aux États-Unis pour estimer le risque de récidive. Le dataset étudié ici vient de l'enquête de ProPublica sur les scores COMPAS. La cible \texttt{two\_year\_recid} indique si une personne a récidivé dans les deux ans. Les attributs sensibles étudiés sont principalement \texttt{race} et \texttt{sex}.
 
-\chapter{Résultats baseline}
-\begin{longtable}{llrrr}
+\begin{tcolorbox}[dangerbox, title={Point éthique majeur}]
+Ce rapport ne dit pas qu'un algorithme doit décider seul dans un contexte judiciaire. Au contraire, il montre pourquoi ce serait dangereux. L'objectif est d'apprendre à auditer un modèle, pas à automatiser une décision de justice.
+\end{tcolorbox}
+
+\section*{Objectifs pédagogiques}
+
+\begin{tcolorbox}[primarybox, title={Objectifs du projet}]
+\begin{enumerate}
+  \item Comprendre ce qu'est un biais algorithmique avec des mots simples.
+  \item Préparer un dataset réel en gardant une trace claire des choix de nettoyage.
+  \item Entraîner plusieurs modèles pour ne pas dépendre d'un seul résultat.
+  \item Comparer performance globale et performance par groupe.
+  \item Tester plusieurs méthodes de réduction de biais.
+  \item Formuler des recommandations concrètes et prudentes.
+\end{enumerate}
+\end{tcolorbox}
+
+% ============================
+% CHAPITRE 1
+% ============================
+\clearpage
+\pagenumbering{arabic}
+\chapter{Comprendre le problème}
+
+\begin{tcolorbox}[infobox]
+Ce chapitre pose les bases. Il explique la classification, les erreurs d'un modèle et la différence entre performance et équité.
+\end{tcolorbox}
+
+\section{Qu'est-ce qu'un modèle de classification ?}
+
+Un modèle de classification reçoit des informations en entrée et doit choisir une classe en sortie. Dans ce projet, le modèle reçoit par exemple l'âge, le nombre d'antécédents, le type d'accusation et d'autres informations disponibles dans COMPAS. Il doit prédire une classe binaire :
+
+\begin{itemize}
+  \item \textbf{0} : la personne n'est pas prédite comme récidiviste dans les deux ans ;
+  \item \textbf{1} : la personne est prédite comme récidiviste dans les deux ans.
+\end{itemize}
+
+\begin{tcolorbox}[primarybox, title={Exemple très simple}]
+Si un modèle prédit la météo, il peut classer demain comme \og pluie \fg{} ou \og pas de pluie \fg{}. Ici, au lieu de la météo, le modèle classe une personne selon un risque de récidive. Comme le sujet touche à des humains, une erreur peut avoir des conséquences beaucoup plus graves.
+\end{tcolorbox}
+
+\section{Les quatre types de résultats}
+
+Pour comprendre les métriques, il faut comprendre la matrice de confusion. Elle compare la prédiction du modèle avec la réalité observée.
+
+\begin{table}[H]
+\centering
+\caption{Lecture simple d'une matrice de confusion}
+\begin{tabularx}{\textwidth}{>{\bfseries}l X}
 \toprule
-Politique & Modèle & Accuracy & F1 & ROC-AUC \\
+Terme & Explication simple \\
 \midrule
+Vrai positif (TP) & Le modèle prédit \og risque \fg{} et la personne récidive réellement. \\
+Faux positif (FP) & Le modèle prédit \og risque \fg{} mais la personne ne récidive pas. \\
+Vrai négatif (TN) & Le modèle prédit \og pas de risque \fg{} et la personne ne récidive pas. \\
+Faux négatif (FN) & Le modèle prédit \og pas de risque \fg{} mais la personne récidive. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{tcolorbox}[dangerbox, title={Pourquoi les faux positifs comptent beaucoup ici}]
+Dans un contexte judiciaire, un faux positif peut signifier qu'une personne est considérée à risque alors qu'elle ne récidive pas. Si un groupe subit beaucoup plus de faux positifs qu'un autre, le modèle crée une différence de traitement.
+\end{tcolorbox}
+
+\section{Performance globale et fairness}
+
+La performance globale répond à la question : \og Le modèle prédit-il souvent correctement ? \fg{} La fairness répond à une autre question : \og Le modèle se trompe-t-il de manière comparable pour les différents groupes ? \fg{}
+
+\begin{table}[H]
+\centering
+\caption{Différence entre performance et fairness}
+\begin{tabularx}{\textwidth}{>{\bfseries\color{primarydark}}l X X}
+\toprule
+Aspect & Question posée & Exemple de métrique \\
+\midrule
+Performance & Le modèle est-il bon en moyenne ? & Accuracy, F1-score, ROC-AUC \\
+Fairness & Le modèle traite-t-il les groupes de manière comparable ? & DP, DI, EO, TPR, FPR \\
+Interprétation & Peut-on faire confiance au résultat global ? & Analyse par groupe \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ============================
+% CHAPITRE 2
+% ============================
+\chapter{Dataset COMPAS}
+
+\begin{tcolorbox}[infobox]
+Le dataset principal du projet est \texttt{data/raw/compas-scores-two-years.csv}. Il vient du dépôt public ProPublica et contient des informations liées à des personnes évaluées par COMPAS.
+\end{tcolorbox}
+
+\section{Source et taille}
+
+Le fichier brut téléchargé est \texttt{compas-scores-two-years.csv}. Après application des filtres de nettoyage et sélection des colonnes utiles, le dataset traité contient \textbf{6172 observations} et \textbf{12 variables}.
+
+\begin{table}[H]
+\centering
+\caption{Fichiers de données utilisés}
+\begin{tabularx}{\textwidth}{>{\ttfamily\small\bfseries}p{0.52\textwidth} X l}
+\toprule
+Fichier & Rôle & Statut \\
+\midrule
+data/raw/compas-scores-two-years.csv & Dataset brut ProPublica & Principal \\
+data/processed/compas\_processed.csv & Dataset nettoyé et prêt pour l'audit & Principal \\
+data/processed/dataset.csv & Dataset synthétique historique & Démo secondaire uniquement \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Variables importantes}
+
+\begin{table}[H]
+\centering
+\caption{Variables centrales de l'audit}
+\begin{tabularx}{\textwidth}{>{\bfseries\color{primarydark}}l X}
+\toprule
+Variable & Signification \\
+\midrule
+\texttt{two\_year\_recid} & Cible à prédire : récidive observée dans les deux ans. \\
+\texttt{race} & Attribut sensible utilisé pour l'audit des disparités raciales. \\
+\texttt{sex} & Attribut sensible utilisé pour l'audit des disparités liées au genre. \\
+\texttt{age} & Âge de la personne au moment de l'évaluation. \\
+\texttt{priors\_count} & Nombre d'antécédents judiciaires. \\
+\texttt{c\_charge\_degree} & Niveau de l'accusation : délit ou crime selon le codage du dataset. \\
+\texttt{decile\_score} & Score COMPAS de risque, de 1 à 10. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Nettoyage réalisé}
+
+Le nettoyage vise à obtenir une base cohérente pour l'apprentissage automatique. Les lignes inutilisables sont retirées, les colonnes sont standardisées et les variables catégorielles sont préparées pour les modèles.
+
+\begin{tcolorbox}[primarybox, title={Règle importante}]
+Les attributs sensibles ne disparaissent jamais du projet : même si on les retire des variables d'entrée du modèle, on les conserve pour mesurer les écarts de traitement. Sans eux, il serait impossible de vérifier si le modèle est injuste.
+\end{tcolorbox}
+
+\section{Limites du dataset}
+
+Un dataset judiciaire ne représente jamais parfaitement la réalité sociale. La variable \texttt{two\_year\_recid} dépend de ce qui a été observé, enregistré et poursuivi. Elle peut donc contenir des biais institutionnels ou historiques.
+
+\begin{tcolorbox}[warningbox, title={À retenir}]
+Le label \texttt{two\_year\_recid} n'est pas une vérité absolue. Il décrit une récidive observée dans les données. Si l'observation elle-même est biaisée, le modèle peut apprendre une partie de ce biais.
+\end{tcolorbox}
+
+\section{Analyse exploratoire}
+
+La figure suivante résume les distributions principales par attribut sensible. Elle sert à repérer si les groupes sont équilibrés, si la cible varie fortement selon les groupes et si certains groupes ont très peu d'exemples.
+
+\IfFileExists{../figures/eda_demographics.png}{%
+\begin{figure}[H]
+\centering
+\includegraphics[width=.92\textwidth]{../figures/eda_demographics.png}
+\caption{Distribution des labels par attribut sensible}
+\end{figure}
+}{}
+
+\begin{tcolorbox}[infobox]
+Un groupe très petit donne des métriques fragiles. Par exemple, si un groupe contient une seule personne, une seule erreur peut faire varier une métrique de 0 à 1. Les conclusions solides doivent donc se concentrer sur les groupes suffisamment représentés.
+\end{tcolorbox}
+
+% ============================
+% CHAPITRE 3
+% ============================
+\chapter{Méthodologie expérimentale}
+
+\section{Pipeline général}
+
+Le projet suit une chaîne complète, de la donnée brute au rapport final.
+
+\begin{center}
+\begin{tikzpicture}[
+  node distance=0.8cm,
+  box/.style={rectangle, rounded corners, draw=primarycolor, fill=primarylight, minimum width=3.2cm, minimum height=0.8cm, align=center, font=\small\bfseries},
+  arrow/.style={->, thick, primarycolor}
+]
+\node[box] (data) {Données COMPAS};
+\node[box, right=of data] (prep) {Nettoyage};
+\node[box, right=of prep] (train) {Modèles};
+\node[box, below=of train] (audit) {Métriques fairness};
+\node[box, left=of audit] (mit) {Mitigation};
+\node[box, left=of mit] (report) {Rapport et slides};
+\draw[arrow] (data) -- (prep);
+\draw[arrow] (prep) -- (train);
+\draw[arrow] (train) -- (audit);
+\draw[arrow] (audit) -- (mit);
+\draw[arrow] (mit) -- (report);
+\end{tikzpicture}
+\end{center}
+
+\section{Découpage train, validation et test}
+
+Le dataset est découpé en trois parties :
+
+\begin{itemize}
+  \item \textbf{Train} : sert à apprendre les paramètres du modèle.
+  \item \textbf{Validation} : sert à comparer des réglages ou des seuils sans regarder le test final.
+  \item \textbf{Test} : sert à mesurer les résultats finaux.
+\end{itemize}
+
+Quand c'est possible, le split est stratifié par une combinaison de la cible et des attributs sensibles. Cela évite qu'un groupe disparaisse accidentellement du test.
+
+\section{Modèles comparés}
+
+\begin{table}[H]
+\centering
+\caption{Modèles entraînés}
+\begin{tabularx}{\textwidth}{>{\bfseries\color{primarydark}}l X X}
+\toprule
+Modèle & Idée intuitive & Pourquoi l'utiliser ? \\
+\midrule
+Régression logistique & Trace une frontière simple entre les classes. & Baseline claire, rapide et interprétable. \\
+Random Forest & Combine plusieurs arbres de décision. & Capte des relations non linéaires et robuste aux variables mélangées. \\
+MLP & Petit réseau de neurones. & Vérifie si une approche neuronale améliore les résultats. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Deux politiques de features}
+
+Les modèles sont entraînés dans deux situations :
+
+\begin{enumerate}
+  \item \textbf{\texttt{with\_sensitive}} : les variables sensibles peuvent être données au modèle.
+  \item \textbf{\texttt{without\_sensitive}} : les variables sensibles sont retirées des features, mais gardées pour l'audit.
+\end{enumerate}
+
+\begin{tcolorbox}[warningbox, title={Erreur fréquente}]
+Retirer \texttt{race} ou \texttt{sex} des features ne garantit pas l'absence de biais. D'autres variables, comme le lieu, le type d'accusation ou les antécédents, peuvent être corrélées aux attributs sensibles et servir de proxys indirects.
+\end{tcolorbox}
+
+\section{Répétitions multi-seeds}
+
+Les expériences sont répétées avec les seeds \textbf{0, 1, 2, 3 et 4}. Une seed contrôle le hasard utilisé par certains algorithmes. Répéter l'expérience permet de vérifier si un résultat est stable ou s'il dépend d'un hasard favorable.
+
+\section{Intervalles de confiance}
+
+Le pipeline calcule aussi des intervalles de confiance bootstrap à 95\% sur des métriques clés. L'idée est simple : au lieu de croire qu'un seul score est parfait, on estime une zone plausible autour du score.
+
+% ============================
+% CHAPITRE 4
+% ============================
+\chapter{Métriques utilisées}
+
+\section{Métriques de performance}
+
+\begin{table}[H]
+\centering
+\caption{Métriques classiques}
+\begin{tabularx}{\textwidth}{>{\bfseries\color{primarydark}}l X X}
+\toprule
+Métrique & Question simple & Attention \\
+\midrule
+Accuracy & Quelle part des prédictions est correcte ? & Peut cacher les erreurs par groupe. \\
+Précision & Quand le modèle dit \og risque \fg{}, a-t-il souvent raison ? & Important si les faux positifs sont graves. \\
+Rappel / TPR & Parmi les vrais récidivistes, combien sont détectés ? & Important si les faux négatifs sont graves. \\
+F1-score & Compromis entre précision et rappel. & Utile si les classes sont déséquilibrées. \\
+ROC-AUC & Le modèle classe-t-il bien les risques du plus faible au plus fort ? & Ne suffit pas à juger la fairness. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Métriques de fairness}
+
+\begin{table}[H]
+\centering
+\caption{Métriques de fairness en langage simple}
+\begin{tabularx}{\textwidth}{>{\bfseries\color{primarydark}}l X}
+\toprule
+Métrique & Interprétation \\
+\midrule
+Demographic parity (DP) & Compare les taux de prédiction positive entre groupes. \\
+Disparate impact (DI) & Rapport entre les taux de sélection de deux groupes. \\
+Equalized odds (EO) & Compare à la fois les TPR et les FPR entre groupes. \\
+Equal opportunity & Compare surtout les TPR entre groupes. \\
+FPR par groupe & Mesure la part de personnes non récidivistes classées à risque. \\
+Selection rate & Part des personnes classées positives par le modèle. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{tcolorbox}[primarybox, title={Pourquoi Equalized Odds est centrale ici}]
+Dans COMPAS, les erreurs n'ont pas toutes le même poids humain. Equalized odds est pertinente parce qu'elle regarde les faux positifs et les vrais positifs par groupe. Elle force à se demander : \og le modèle fait-il le même type d'erreurs selon les groupes ? \fg{}
+\end{tcolorbox}
+
+\section{Lecture des écarts}
+
+Dans ce rapport, un écart proche de 0 est préférable. Un écart élevé signifie qu'il existe une différence importante entre groupes.
+
+\begin{table}[H]
+\centering
+\caption{Lecture qualitative des écarts de fairness}
+\begin{tabularx}{\textwidth}{c X}
+\toprule
+\textbf{Écart} & \textbf{Interprétation prudente} \\
+\midrule
+0.00 à 0.05 & Écart faible. \\
+0.05 à 0.15 & Écart visible, à surveiller. \\
+0.15 à 0.30 & Écart important, nécessite analyse. \\
+$>$ 0.30 & Écart très important, mitigation et justification nécessaires. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ============================
+% CHAPITRE 5
+% ============================
+\chapter{Résultats des modèles baseline}
+
+\section{Résumé global}
+
+\begingroup
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{@{}llrrr@{}}
+\caption{Baselines multi-seeds : moyenne et écart-type}\\
+\toprule
+Politique & Modèle & Accuracy & F1-score & ROC-AUC \\
+\midrule
+\endfirsthead
+\toprule
+Politique & Modèle & Accuracy & F1-score & ROC-AUC \\
+\midrule
+\endhead
 with\_sensitive & logistic\_regression & 0.693 & 0.624 & 0.751 \\
 with\_sensitive & mlp & 0.686 & 0.623 & 0.750 \\
 with\_sensitive & random\_forest & 0.692 & 0.630 & 0.755 \\
@@ -121,17 +647,73 @@ without\_sensitive & logistic\_regression & 0.692 & 0.624 & 0.748 \\
 without\_sensitive & mlp & 0.687 & 0.625 & 0.748 \\
 without\_sensitive & random\_forest & 0.690 & 0.624 & 0.751 \\
 \bottomrule
-\caption{Résumé des baselines, moyenne multi-seeds quand disponible}
 \end{longtable}
+\endgroup
 
-\IfFileExists{../figures/baseline_confusion_matrices.png}{\begin{figure}[H]\centering\includegraphics[width=.95\textwidth]{../figures/baseline_confusion_matrices.png}\caption{Matrices de confusion par groupe}\end{figure}}{}
-\IfFileExists{../figures/baseline_roc_curves.png}{\begin{figure}[H]\centering\includegraphics[width=.8\textwidth]{../figures/baseline_roc_curves.png}\caption{Courbes ROC par groupe}\end{figure}}{}
+\begin{tcolorbox}[successbox, title={Lecture simple}]
+Les modèles ont des performances proches. Les écarts-types multi-seeds restent faibles : environ 0.004 à 0.013 pour l'accuracy, 0.009 à 0.016 pour le F1-score et 0.005 à 0.010 pour la ROC-AUC. La meilleure ROC-AUC moyenne est obtenue par la forêt aléatoire avec attributs sensibles : environ 0.755. Cependant, l'écart est faible. En pratique, la régression logistique reste intéressante parce qu'elle est plus simple à expliquer.
+\end{tcolorbox}
 
-\chapter{Métriques par groupe}
-\begin{longtable}{llrrrrrr}
+\section{Baseline principale retenue}
+
+La baseline principale utilisée pour les analyses détaillées est la régression logistique sans attributs sensibles directs, seed 0. Elle obtient :
+
+\begin{table}[H]
+\centering
+\caption{Baseline principale}
+\begin{tabular}{lr}
+\toprule
+Métrique & Valeur \\
+\midrule
+Accuracy & 0.692 \\
+F1-score & 0.625 \\
+ROC-AUC & 0.751 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Matrices de confusion et courbes ROC}
+
+\IfFileExists{../figures/baseline_confusion_matrices.png}{%
+\begin{figure}[H]
+\centering
+\includegraphics[width=.96\textwidth]{../figures/baseline_confusion_matrices.png}
+\caption{Matrices de confusion par groupe}
+\end{figure}
+}{}
+
+\IfFileExists{../figures/baseline_roc_curves.png}{%
+\begin{figure}[H]
+\centering
+\includegraphics[width=.82\textwidth]{../figures/baseline_roc_curves.png}
+\caption{Courbes ROC par groupe}
+\end{figure}
+}{}
+
+\begin{tcolorbox}[warningbox, title={Interprétation}]
+Ces figures montrent pourquoi un score global ne suffit pas. Deux groupes peuvent avoir une ROC-AUC correcte, mais des seuils ou erreurs différents. Il faut donc analyser le détail par groupe.
+\end{tcolorbox}
+
+% ============================
+% CHAPITRE 6
+% ============================
+\chapter{Analyse détaillée de fairness}
+
+\section{Résultats par groupe}
+
+\begingroup
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}llrrrrrr@{}}
+\caption{Métriques détaillées par groupe}\\
 \toprule
 Attribut & Groupe & n & Base rate & Selection & TPR & FPR & Precision \\
 \midrule
+\endfirsthead
+\toprule
+Attribut & Groupe & n & Base rate & Selection & TPR & FPR & Precision \\
+\midrule
+\endhead
 race & African-American & 467 & 0.535 & 0.495 & 0.652 & 0.313 & 0.706 \\
 race & Caucasian & 319 & 0.379 & 0.235 & 0.421 & 0.121 & 0.680 \\
 race & Hispanic & 89 & 0.326 & 0.247 & 0.517 & 0.117 & 0.682 \\
@@ -141,64 +723,279 @@ race & Native American & 1 & 0.000 & 0.000 & 0.000 & 0.000 & 0.000 \\
 sex & Female & 160 & 0.312 & 0.256 & 0.460 & 0.164 & 0.561 \\
 sex & Male & 766 & 0.484 & 0.388 & 0.577 & 0.210 & 0.721 \\
 \bottomrule
-\caption{Métriques de fairness par groupe}
 \end{longtable}
+\endgroup
 
-\chapter{Atténuation des biais}
-\begin{longtable}{llrrrr}
+\section{Lecture des résultats pour \texttt{race}}
+
+Le groupe \texttt{African-American} a un selection rate de 0.495, contre 0.235 pour le groupe \texttt{Caucasian}. Cela signifie que le modèle prédit presque deux fois plus souvent la classe positive pour le premier groupe dans le test.
+
+Le FPR est aussi plus élevé : 0.313 pour \texttt{African-American}, contre 0.121 pour \texttt{Caucasian}. En mots simples, parmi les personnes qui ne récidivent pas, le modèle classe à risque une proportion beaucoup plus forte du premier groupe.
+
+\begin{tcolorbox}[dangerbox, title={Point le plus préoccupant}]
+L'écart de FPR sur \texttt{race} est important. Dans un contexte judiciaire, cela doit être traité comme un signal critique, parce que les faux positifs peuvent avoir des conséquences humaines lourdes.
+\end{tcolorbox}
+
+\section{Lecture des résultats pour \texttt{sex}}
+
+Les écarts liés à \texttt{sex} existent, mais ils sont moins élevés que ceux observés pour \texttt{race}. Le selection rate est de 0.256 pour \texttt{Female} et 0.388 pour \texttt{Male}. Le FPR est de 0.164 pour \texttt{Female} et 0.210 pour \texttt{Male}.
+
+\begin{tcolorbox}[infobox]
+Cela ne veut pas dire qu'il n'y a aucun problème sur \texttt{sex}. Cela signifie seulement que, dans cette expérience, les disparités les plus fortes apparaissent sur \texttt{race}.
+\end{tcolorbox}
+
+\section{Résumé des écarts fairness}
+
+\begin{table}[H]
+\centering
+\caption{Écarts principaux de fairness sur la baseline}
+\begin{tabular}{lrrr}
+\toprule
+Attribut & DP diff & EO diff & FPR diff \\
+\midrule
+race & 0.495 & 0.652 & 0.313 \\
+sex & 0.131 & 0.117 & 0.046 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{tcolorbox}[warningbox, title={Conclusion de l'audit baseline}]
+La baseline est acceptable en performance globale, mais elle n'est pas satisfaisante en fairness sur \texttt{race}. La suite du projet teste donc plusieurs méthodes pour réduire ces écarts.
+\end{tcolorbox}
+
+% ============================
+% CHAPITRE 7
+% ============================
+\chapter{Méthodes de mitigation}
+
+\section{Pourquoi atténuer les biais}
+
+Une mitigation cherche à réduire les écarts entre groupes. Elle ne rend pas magiquement un système juste, mais elle permet de tester des compromis. Le but est de trouver une solution qui garde une performance utile tout en réduisant les disparités les plus problématiques.
+
+\section{Familles testées}
+
+\begin{table}[H]
+\centering
+\caption{Familles de mitigation comparées}
+\begin{tabularx}{\textwidth}{>{\bfseries\color{primarydark}}l X X}
+\toprule
+Méthode & Principe simple & Moment d'action \\
+\midrule
+Reweighting & Donner plus ou moins de poids à certains exemples. & Avant / pendant entraînement \\
+Resampling & Rééquilibrer les couples groupe-label par duplication ou sous-échantillonnage. & Avant entraînement \\
+Fairlearn & Entraîner sous contrainte de fairness. & Pendant entraînement \\
+Adversarial PyTorch & Apprendre une représentation qui prédit la cible mais cache l'attribut sensible. & Pendant entraînement \\
+Seuils par groupe & Ajuster le seuil de décision selon les groupes. & Après entraînement \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{tcolorbox}[dangerbox, title={Attention éthique sur les seuils par groupe}]
+Modifier des seuils selon le groupe peut réduire certaines métriques, mais cette solution doit être justifiée juridiquement et éthiquement. Elle ne doit jamais être appliquée sans gouvernance, transparence et validation humaine.
+\end{tcolorbox}
+
+\section{Résultats des mitigations}
+
+\begingroup
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}llrrrr@{}}
+\caption{Comparaison des méthodes de mitigation}\\
 \toprule
 Attribut & Méthode & Accuracy & F1 & DP diff & EO diff \\
 \midrule
+\endfirsthead
+\toprule
+Attribut & Méthode & Accuracy & F1 & DP diff & EO diff \\
+\midrule
+\endhead
 race & reweighting & 0.689 & 0.613 & 0.482 & 0.636 \\
 race & resampling & 0.673 & 0.648 & 1.000 & 1.000 \\
 race & threshold & 0.668 & 0.597 & 1.000 & 1.000 \\
 race & fairlearn\_demographic\_parity & 0.552 & 0.353 & 0.255 & 0.316 \\
 race & fairlearn\_equalized\_odds & 0.548 & 0.336 & 0.248 & 0.276 \\
-race & adversarial lambda=0.0 & 0.687 & 0.605 & 0.480 & 0.632 \\
-race & adversarial lambda=0.1 & 0.690 & 0.617 & 0.499 & 0.652 \\
-race & adversarial lambda=0.5 & 0.687 & 0.619 & 0.516 & 0.660 \\
-race & adversarial lambda=1.0 & 0.691 & 0.589 & 0.435 & 0.596 \\
+race & adversarial $\lambda=0.0$ & 0.687 & 0.605 & 0.480 & 0.632 \\
+race & adversarial $\lambda=0.1$ & 0.690 & 0.617 & 0.499 & 0.652 \\
+race & adversarial $\lambda=0.5$ & 0.687 & 0.619 & 0.516 & 0.660 \\
+race & adversarial $\lambda=1.0$ & 0.691 & 0.589 & 0.435 & 0.596 \\
 sex & reweighting & 0.693 & 0.628 & 0.130 & 0.148 \\
 sex & resampling & 0.684 & 0.647 & 0.142 & 0.180 \\
 sex & threshold & 0.683 & 0.619 & 0.050 & 0.077 \\
 sex & fairlearn\_demographic\_parity & 0.633 & 0.561 & 0.023 & 0.121 \\
 sex & fairlearn\_equalized\_odds & 0.668 & 0.620 & 0.013 & 0.074 \\
-sex & adversarial lambda=0.0 & 0.685 & 0.603 & 0.132 & 0.167 \\
-sex & adversarial lambda=0.1 & 0.690 & 0.614 & 0.141 & 0.183 \\
-sex & adversarial lambda=0.5 & 0.691 & 0.651 & 0.083 & 0.152 \\
-sex & adversarial lambda=1.0 & 0.643 & 0.673 & 0.063 & 0.057 \\
+sex & adversarial $\lambda=0.0$ & 0.685 & 0.603 & 0.132 & 0.167 \\
+sex & adversarial $\lambda=0.1$ & 0.690 & 0.614 & 0.141 & 0.183 \\
+sex & adversarial $\lambda=0.5$ & 0.691 & 0.651 & 0.083 & 0.152 \\
+sex & adversarial $\lambda=1.0$ & 0.643 & 0.673 & 0.063 & 0.057 \\
 \bottomrule
-\caption{Comparaison des méthodes de mitigation}
 \end{longtable}
+\endgroup
 
-\IfFileExists{../figures/debiasing_comparison.png}{\begin{figure}[H]\centering\includegraphics[width=.9\textwidth]{../figures/debiasing_comparison.png}\caption{Comparaison fairness avant/après mitigation}\end{figure}}{}
+\IfFileExists{../figures/debiasing_comparison.png}{%
+\begin{figure}[H]
+\centering
+\includegraphics[width=.92\textwidth]{../figures/debiasing_comparison.png}
+\caption{Comparaison fairness avant et après mitigation}
+\end{figure}
+}{}
 
-\chapter{Discussion}
-\section{Compromis performance/fairness}
-Les résultats montrent que l'accuracy globale ne suffit pas. Les écarts de FPR, TPR et selection rate doivent être analysés groupe par groupe. Equalized odds est privilégiée pour COMPAS car elle explicite les erreurs potentiellement lourdes dans un contexte judiciaire.
+\section{Interprétation}
 
-\section{Limites}
-Les limites principales sont la nature observationnelle du dataset, les critiques méthodologiques sur la construction des labels COMPAS, la sensibilité juridique des seuils par groupe et l'impossibilité de satisfaire simultanément toutes les définitions de fairness.
+Pour \texttt{race}, Fairlearn réduit fortement les écarts DP et EO, mais au prix d'une baisse nette d'accuracy et de F1-score. Cela illustre le compromis classique : améliorer la fairness peut diminuer la performance globale si le dataset contient des déséquilibres importants.
 
-\chapter{Recommandations}
+Pour \texttt{sex}, Fairlearn et l'adversarial debiasing avec $\lambda=1.0$ donnent des écarts beaucoup plus faibles. L'adversarial $\lambda=1.0$ améliore même le F1-score, mais réduit l'accuracy. Le choix dépend donc de la métrique prioritaire.
+
+\begin{tcolorbox}[primarybox, title={Meilleur compromis prudent}]
+Dans un contexte COMPAS, il est préférable de privilégier les méthodes qui réduisent Equalized Odds et FPR diff, même si l'accuracy baisse légèrement. Cependant, si la baisse de performance devient trop forte, la solution peut perdre son utilité opérationnelle.
+\end{tcolorbox}
+
+% ============================
+% CHAPITRE 8
+% ============================
+\chapter{Discussion critique}
+
+\section{Pourquoi il n'existe pas une seule fairness}
+
+La fairness est un ensemble de définitions parfois incompatibles. Un modèle ne peut pas toujours satisfaire toutes les métriques en même temps, surtout si les groupes ont des base rates différents. Il faut donc choisir la métrique en fonction du contexte.
+
+\begin{tcolorbox}[infobox]
+Dans un contexte judiciaire, Equalized Odds est plus pertinente que la simple parité démographique, car elle observe directement les erreurs. Ce qui compte n'est pas seulement le nombre de personnes classées positives, mais aussi qui est classé positif à tort.
+\end{tcolorbox}
+
+\section{Pourquoi l'accuracy peut tromper}
+
+Une accuracy autour de 0.69 semble correcte. Pourtant, elle ne dit pas si les erreurs sont équilibrées entre groupes. Un modèle peut avoir la même accuracy pour deux groupes, mais faire plus de faux positifs dans l'un et plus de faux négatifs dans l'autre. L'impact humain n'est alors pas le même.
+
+\section{Limites techniques}
+
 \begin{itemize}
-\item \textbf{HIGH -- Fairness} : Prioriser l'analyse TPR/FPR par groupe avant tout deploiement.
-\item \textbf{HIGH -- Judicial risk} : Dans un cas type COMPAS, documenter explicitement les faux positifs par groupe.
-\item \textbf{HIGH -- Fairness} : Prioriser l'analyse TPR/FPR par groupe avant tout deploiement.
-\item \textbf{HIGH -- Governance} : Mettre en place un monitoring periodique accuracy, F1, DP, EO, TPR et FPR par groupe.
-\item \textbf{MEDIUM -- Fairness} : Comparer reweighting, resampling et seuils de decision sur validation.
-\item \textbf{MEDIUM -- Fairness} : Comparer reweighting, resampling et seuils de decision sur validation.
-\item \textbf{MEDIUM -- Methodology} : Justifier le choix d'equalized odds comme critere principal quand les faux positifs/faux negatifs ont un impact humain fort.
-\item \textbf{INFO -- Fairness} : Presenter ces valeurs avec les tableaux TPR/FPR/selection rate par groupe dans le rapport final.
-\item \textbf{INFO -- Fairness} : Presenter ces valeurs avec les tableaux TPR/FPR/selection rate par groupe dans le rapport final.
+  \item Les groupes très petits produisent des métriques instables.
+  \item Les résultats dépendent du split train/validation/test.
+  \item Certaines méthodes de mitigation baissent fortement la performance.
+  \item Les attributs sensibles peuvent être indirectement présents via des proxys.
+  \item La causalité n'est pas démontrée : on observe des associations statistiques.
 \end{itemize}
 
-\chapter{Conclusion}
-Le projet fournit un audit reproductible de COMPAS, compare plusieurs modèles, mesure les biais par groupe et teste plusieurs familles de mitigation. La recommandation principale est de ne jamais déployer un modèle sensible sur la seule base de l'accuracy globale.
+\section{Limites éthiques}
 
+\begin{itemize}
+  \item Un modèle ne doit pas remplacer une décision humaine dans un domaine judiciaire.
+  \item Un dataset historique peut contenir des biais de police, de poursuite ou d'enregistrement.
+  \item Réduire une métrique de biais ne garantit pas la justice réelle.
+  \item Les personnes concernées devraient pouvoir comprendre, contester et demander une révision humaine.
+\end{itemize}
+
+% ============================
+% CHAPITRE 9
+% ============================
+\chapter{Recommandations}
+
+\section{Recommandations techniques}
+
+\begin{tcolorbox}[successbox, title={À mettre en place avant tout usage sensible}]
+\begin{enumerate}
+  \item Toujours publier les métriques globales et les métriques par groupe.
+  \item Suivre TPR, FPR, selection rate, precision et F1-score pour chaque attribut sensible.
+  \item Répéter les expériences avec plusieurs seeds.
+  \item Documenter les choix de seuils et les compromis performance/fairness.
+  \item Tester Fairlearn et adversarial debiasing, mais ne pas retenir une méthode seulement parce qu'elle diminue une métrique.
+  \item Ajouter un monitoring si le modèle est réutilisé sur de nouvelles données.
+\end{enumerate}
+\end{tcolorbox}
+
+\section{Recommandations de gouvernance}
+
+\begin{tcolorbox}[warningbox, title={Gouvernance indispensable}]
+\begin{itemize}
+  \item Mettre en place une validation humaine pour toute décision sensible.
+  \item Prévoir une procédure de contestation.
+  \item Expliquer clairement les limites du modèle aux utilisateurs.
+  \item Ne jamais présenter le score comme une vérité objective sur une personne.
+  \item Réaliser un audit périodique, car les données peuvent changer avec le temps.
+\end{itemize}
+\end{tcolorbox}
+
+\section{Recommandation finale}
+
+La meilleure décision n'est pas de chercher \og le modèle parfait \fg{}. La meilleure décision est de mettre en place un système contrôlé : modèle documenté, métriques publiées, erreurs surveillées, seuils justifiés, supervision humaine et possibilité de recours.
+
+% ============================
+% CHAPITRE 10
+% ============================
+\chapter{Conclusion}
+
+Ce projet montre qu'un audit de biais doit aller beaucoup plus loin qu'un simple entraînement de modèle. Sur COMPAS, les modèles obtiennent une performance globale raisonnable, mais les écarts par groupe, surtout sur \texttt{race}, restent importants.
+
+Le résultat principal est donc double :
+
+\begin{enumerate}
+  \item \textbf{Côté performance}, les modèles sont utilisables pour une étude technique, avec une accuracy autour de 0.69 et une ROC-AUC autour de 0.75.
+  \item \textbf{Côté fairness}, les écarts observés interdisent toute conclusion naïve du type \og le modèle est bon donc il est juste \fg{}.
+\end{enumerate}
+
+\begin{tcolorbox}[summarybox]
+\large
+La leçon essentielle est simple : dans un domaine sensible, un modèle doit être évalué avec deux regards. Le premier regarde s'il prédit correctement. Le second regarde pour qui il se trompe, comment il se trompe, et quelles conséquences ces erreurs peuvent avoir.
+\end{tcolorbox}
+
+% ============================
+% ANNEXES
+% ============================
 \appendix
 \chapter{Annexes techniques}
-Les scripts principaux sont \texttt{scripts/download\_compas.py}, \texttt{scripts/train\_baseline.py}, \texttt{scripts/evaluate\_fairness.py}, \texttt{scripts/train\_adversarial.py} et \texttt{scripts/run\_all.sh}.
+
+\section{Structure finale du projet}
+
+\begin{table}[H]
+\centering
+\caption{Structure des principaux livrables}
+\begin{tabularx}{\textwidth}{>{\bfseries}l X}
+\toprule
+Dossier / fichier & Rôle \\
+\midrule
+\texttt{scripts/download\_compas.py} & Téléchargement du dataset COMPAS. \\
+\texttt{scripts/train\_baseline.py} & Entraînement des modèles baseline. \\
+\texttt{scripts/evaluate\_fairness.py} & Évaluation des métriques de fairness. \\
+\texttt{scripts/train\_adversarial.py} & Entraînement adversarial PyTorch. \\
+\texttt{scripts/run\_all.sh} & Exécution complète reproductible. \\
+\texttt{notebooks/01\_...06\_...} & Notebooks pédagogiques en six étapes. \\
+\texttt{results/tables} & Tableaux CSV finaux. \\
+\texttt{results/metrics} & Métriques JSON complètes. \\
+\texttt{reports/latex} & Rapport LaTeX et PDF. \\
+\texttt{slides} & Présentation Beamer et PDF. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Commandes de reproduction}
+
+\begin{tcolorbox}[codebox]
+\begin{lstlisting}[style=pythonstyle]
+# Depuis le dossier bias_audit
+python scripts/download_compas.py
+python -m src.audit_main --preset compas --data-path data/raw/compas-scores-two-years.csv
+bash scripts/run_all.sh
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Glossaire très simple}
+
+\begin{table}[H]
+\centering
+\caption{Glossaire}
+\begin{tabularx}{\textwidth}{>{\bfseries\color{primarydark}}l X}
+\toprule
+Mot & Explication \\
+\midrule
+Biais & Différence de traitement ou d'erreur entre groupes. \\
+Attribut sensible & Variable liée à une caractéristique protégée, par exemple \texttt{race} ou \texttt{sex}. \\
+Proxy & Variable qui ne nomme pas directement un attribut sensible mais peut lui être fortement liée. \\
+Mitigation & Technique qui cherche à réduire un biais mesuré. \\
+Faux positif & Prédiction positive alors que la réalité est négative. \\
+Faux négatif & Prédiction négative alors que la réalité est positive. \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \begin{thebibliography}{9}
 \bibitem{propublica} ProPublica, \emph{Machine Bias / COMPAS analysis dataset}, 2016.
@@ -207,4 +1004,5 @@ Les scripts principaux sont \texttt{scripts/download\_compas.py}, \texttt{script
 \bibitem{zhang} Zhang, Lemoine, Mitchell, \emph{Mitigating Unwanted Biases with Adversarial Learning}, AIES 2018.
 \bibitem{nist} NIST, \emph{AI Risk Management Framework}, 2023.
 \end{thebibliography}
+
 \end{document}
