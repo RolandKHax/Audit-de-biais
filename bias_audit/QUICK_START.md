@@ -1,86 +1,54 @@
-# Guide de demarrage rapide
+# Guide de démarrage rapide
 
 ## 1. Installer
 
 ```bash
-cd bias_audit
+cd "Audit de biais d’un modèle de classification/bias_audit"
 python -m venv venv
 source venv/bin/activate
 python -m pip install --upgrade pip setuptools wheel
 python -m pip install -r requirements.txt
-python -m pip check
 ```
 
-Le projet cible Python 3.14 avec des dependances disponibles dans cet environnement. AIF360, Fairlearn, TensorFlow et les anciens builds PyTorch ne sont pas necessaires pour le workflow par defaut.
-
-## 2. Generer des donnees de test
+## 2. Lancer tout le projet
 
 ```bash
-python -c "from src.data_processing import generate_sample_data; generate_sample_data(5000).to_csv('data/processed/dataset.csv', index=False)"
+bash scripts/run_all.sh
 ```
 
-## 3. Lancer l'audit CLI
+## 3. Vérifier les sorties
 
-```bash
-python -m src.audit_main \
-  --data data/processed/dataset.csv \
-  --protected-attrs gender race \
-  --label label \
-  --debiasing reweighting resampling \
-  --output reports/audit_report.html \
-  --output-dir reports/figures
-```
+Rapports :
 
-Sorties principales:
-
+- `reports/latex/rapport_audit_biais.pdf`
+- `slides/presentation.pdf`
 - `reports/audit_report.html`
 - `reports/audit_report.json`
-- `reports/figures/*.png`
 
-## 4. Lancer les notebooks
+Résultats :
+
+- `results/tables/baseline_summary_aggregate.csv`
+- `results/tables/fairness_by_group.csv`
+- `results/tables/mitigation_summary.csv`
+- `results/metrics/audit_metrics.json`
+
+## 4. Commandes séparées
 
 ```bash
-jupyter nbconvert --execute notebooks/*.ipynb --to notebook --inplace
+python scripts/download_compas.py
+python scripts/train_baseline.py
+python scripts/evaluate_fairness.py
+python scripts/train_adversarial.py
+python scripts/generate_latex_deliverables.py
 ```
 
-Les notebooks generent aussi:
-
-- `reports/executive_summary.txt`
-- `reports/MODEL_CARD.md`
-- `reports/strategic_recommendations.txt`
-- `reports/final_audit_report.json`
-- `outputs/debiasing_results.json`
-
-## 5. Tester
+## 5. Tests
 
 ```bash
+python -m compileall -q src scripts tests
 python -m pytest tests -q
-python -m compileall -q src tests
 ```
 
-## Donnees attendues
+## Note importante
 
-Le CSV doit contenir:
-
-- une colonne cible binaire, par exemple `label`;
-- une ou plusieurs colonnes protegees, par exemple `gender`, `race`;
-- des variables predictives numeriques ou categorielles.
-
-Exemple:
-
-```csv
-gender,race,age,education,experience,score,label
-Male,White,35,Bachelor,10,85,1
-Female,Black,28,Master,5,78,0
-```
-
-## Configuration
-
-`configs/config.yaml` sert de reference projet. Le CLI lit explicitement les arguments passes en ligne de commande; gardez donc les commandes ci-dessus comme source d'execution principale.
-
-Les mitigations activees par defaut sont:
-
-- `reweighting`
-- `resampling`
-
-Les approches adversariales et certains post-traitements restent des extensions possibles, mais ne sont pas activees dans l'environnement Python 3.14 par defaut.
+Le dataset synthétique reste disponible pour les tests unitaires, mais le livrable principal utilise COMPAS réel comme demandé dans le cahier de charges.

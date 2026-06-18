@@ -1,215 +1,49 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rapport d'Audit de Biais - 2026-06-16</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background-color: #f5f5f5;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 40px 20px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-        .section {
-            background: white;
-            padding: 30px;
-            margin-bottom: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .section h2 {
-            color: #667eea;
-            border-bottom: 3px solid #667eea;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-        .metric {
-            display: inline-block;
-            background: #f8f9fa;
-            padding: 15px 25px;
-            margin: 10px;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-        }
-        .metric-label {
-            font-size: 0.9em;
-            color: #666;
-            margin-bottom: 5px;
-        }
-        .metric-value {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #333;
-        }
-        .recommendation {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 5px;
-        }
-        .recommendation.high {
-            background: #f8d7da;
-            border-color: #dc3545;
-        }
-        .recommendation.medium {
-            background: #fff3cd;
-            border-color: #ffc107;
-        }
-        .recommendation.low {
-            background: #d1ecf1;
-            border-color: #17a2b8;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        th {
-            background-color: #667eea;
-            color: white;
-        }
-        .status-good { color: #28a745; font-weight: bold; }
-        .status-warning { color: #ffc107; font-weight: bold; }
-        .status-bad { color: #dc3545; font-weight: bold; }
-    </style>
+  <meta charset="utf-8">
+  <title>Rapport d'audit de biais</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 32px; color: #222; line-height: 1.5; }
+    h1, h2 { color: #1f4e79; }
+    table { border-collapse: collapse; width: 100%; margin: 16px 0 28px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background: #eef4f8; }
+    .metric { display: inline-block; margin: 8px 18px 8px 0; padding: 10px 14px; background: #f6f8fa; }
+    .warn { color: #9a3412; font-weight: bold; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📊 Rapport d'Audit de Biais</h1>
-            <p>Date: 16/06/2026 17:55</p>
-            <p>Dataset: data/processed/dataset.csv</p>
-        </div>
-        
-        <div class="section">
-            <h2>📈 Résumé Exécutif</h2>
-            <p>Ce rapport présente les résultats de l'audit de biais effectué sur le modèle de classification.
-            L'audit a évalué les métriques de fairness pour les attributs protégés: gender, race.</p>
-        </div>
-        
-        <div class="section">
-            <h2>📊 Performance Baseline</h2>
-            <div>
-                <div class="metric">
-                    <div class="metric-label">Accuracy</div>
-                    <div class="metric-value">0.6580</div>
-                </div>
-                
-                <div class="metric">
-                    <div class="metric-label">Precision</div>
-                    <div class="metric-value">0.6624</div>
-                </div>
-                
-                <div class="metric">
-                    <div class="metric-label">Recall</div>
-                    <div class="metric-value">0.9646</div>
-                </div>
-                
-                <div class="metric">
-                    <div class="metric-label">F1 Score</div>
-                    <div class="metric-value">0.7854</div>
-                </div>
-                </div>
-        </div>
-        
-        <div class="section">
-            <h2>⚖️ Métriques de Fairness</h2>
-            <h3>Attribut: gender</h3><table><tr><th>Métrique</th><th>Valeur</th><th>Statut</th></tr><tr><td>Disparate Impact</td><td>0.9607</td><td class="status-good">✓ Acceptable</td></tr><tr><td>Demographic Parity Difference</td><td>0.0378</td><td class="status-good">✓ Bon</td></tr></table><h3>Attribut: race</h3><table><tr><th>Métrique</th><th>Valeur</th><th>Statut</th></tr><tr><td>Disparate Impact</td><td>0.9993</td><td class="status-good">✓ Acceptable</td></tr><tr><td>Demographic Parity Difference</td><td>0.0006</td><td class="status-good">✓ Bon</td></tr></table>
-        </div>
-        
-        <div class="section">
-            <h2>🔧 Résultats du Débiaisage</h2>
-            <h3>Attribut: gender</h3><table><tr><th>Méthode</th><th>DI Avant</th><th>DI Après</th><th>Accuracy Avant</th><th>Accuracy Après</th></tr>
-                <tr>
-                    <td>Reweighting</td>
-                    <td>0.9607</td>
-                    <td>0.9965</td>
-                    <td>0.6580</td>
-                    <td>0.6460</td>
-                </tr>
-                
-                <tr>
-                    <td>Resampling</td>
-                    <td>0.9607</td>
-                    <td>0.9472</td>
-                    <td>0.6580</td>
-                    <td>0.6570</td>
-                </tr>
-                </table><h3>Attribut: race</h3><table><tr><th>Méthode</th><th>DI Avant</th><th>DI Après</th><th>Accuracy Avant</th><th>Accuracy Après</th></tr>
-                <tr>
-                    <td>Reweighting</td>
-                    <td>0.9993</td>
-                    <td>0.9992</td>
-                    <td>0.6580</td>
-                    <td>0.6470</td>
-                </tr>
-                
-                <tr>
-                    <td>Resampling</td>
-                    <td>0.9993</td>
-                    <td>1.0070</td>
-                    <td>0.6580</td>
-                    <td>0.6190</td>
-                </tr>
-                </table>
-        </div>
-        
-        <div class="section">
-            <h2>💡 Recommandations</h2>
-            
-            <div class="recommendation high">
-                <strong>[HIGH] Governance</strong><br>
-                <em>Issue:</em> Absence de monitoring continu<br>
-                <em>Recommandation:</em> Mettre en place un système de monitoring des métriques de fairness en production<br>
-                <em>Impact attendu:</em> Détection précoce des dérives de fairness
-            </div>
-            
-            <div class="recommendation medium">
-                <strong>[MEDIUM] Documentation</strong><br>
-                <em>Issue:</em> Documentation du modèle incomplète<br>
-                <em>Recommandation:</em> Créer une Model Card documentant les décisions de fairness et les limitations<br>
-                <em>Impact attendu:</em> Meilleure transparence et gouvernance
-            </div>
-            
-        </div>
-        
-        <div class="section">
-            <h2>📝 Méthodologie</h2>
-            <p>Cet audit a été réalisé en suivant les meilleures pratiques en matière d'évaluation de fairness:</p>
-            <ul>
-                <li>Calcul de métriques standards (Demographic Parity, Equalized Odds, Disparate Impact)</li>
-                <li>Évaluation stratifiée par groupe</li>
-                <li>Application et comparaison de techniques de débiaisage</li>
-                <li>Génération de recommandations actionnables</li>
-            </ul>
-        </div>
-    </div>
+  <h1>Audit de biais d'un modele de classification</h1>
+  <p><strong>Date:</strong> 2026-06-18 03:16</p>
+  <p><strong>Baseline primaire:</strong> seed=0, politique=without_sensitive, modele=logistic_regression.</p>
+
+  <h2>Resume executif</h2>
+  <p>L'audit mesure la performance globale et les disparites par groupe protege.
+  Il compare les modeles avec et sans attributs sensibles afin d'eviter la conclusion
+  erronee selon laquelle supprimer ces colonnes suffit a supprimer le biais.</p>
+  <div class="metric">Accuracy: 0.692</div>
+  <div class="metric">Precision: 0.701</div>
+  <div class="metric">Recall: 0.563</div>
+  <div class="metric">F1: 0.625</div>
+  <div class="metric">ROC-AUC: 0.751</div>
+
+  <h2>Comparaison des baselines</h2>
+  <table><tr><th>seed</th><th>feature_policy</th><th>model</th><th>accuracy</th><th>f1_score</th><th>roc_auc</th></tr><tr><td>seed_0</td><td>without_sensitive</td><td>logistic_regression</td><td>0.692</td><td>0.625</td><td>0.751</td></tr><tr><td>seed_0</td><td>without_sensitive</td><td>random_forest</td><td>0.691</td><td>0.626</td><td>0.749</td></tr><tr><td>seed_0</td><td>without_sensitive</td><td>mlp</td><td>0.687</td><td>0.618</td><td>0.751</td></tr><tr><td>seed_0</td><td>with_sensitive</td><td>logistic_regression</td><td>0.699</td><td>0.631</td><td>0.756</td></tr><tr><td>seed_0</td><td>with_sensitive</td><td>random_forest</td><td>0.697</td><td>0.634</td><td>0.759</td></tr><tr><td>seed_0</td><td>with_sensitive</td><td>mlp</td><td>0.693</td><td>0.633</td><td>0.757</td></tr><tr><td>seed_1</td><td>without_sensitive</td><td>logistic_regression</td><td>0.690</td><td>0.614</td><td>0.754</td></tr><tr><td>seed_1</td><td>without_sensitive</td><td>random_forest</td><td>0.678</td><td>0.597</td><td>0.759</td></tr><tr><td>seed_1</td><td>without_sensitive</td><td>mlp</td><td>0.688</td><td>0.615</td><td>0.759</td></tr><tr><td>seed_1</td><td>with_sensitive</td><td>logistic_regression</td><td>0.683</td><td>0.604</td><td>0.757</td></tr><tr><td>seed_1</td><td>with_sensitive</td><td>random_forest</td><td>0.686</td><td>0.611</td><td>0.758</td></tr><tr><td>seed_1</td><td>with_sensitive</td><td>mlp</td><td>0.670</td><td>0.602</td><td>0.751</td></tr><tr><td>seed_2</td><td>without_sensitive</td><td>logistic_regression</td><td>0.688</td><td>0.613</td><td>0.745</td></tr><tr><td>seed_2</td><td>without_sensitive</td><td>random_forest</td><td>0.690</td><td>0.624</td><td>0.751</td></tr><tr><td>seed_2</td><td>without_sensitive</td><td>mlp</td><td>0.693</td><td>0.629</td><td>0.747</td></tr><tr><td>seed_2</td><td>with_sensitive</td><td>logistic_regression</td><td>0.687</td><td>0.609</td><td>0.747</td></tr><tr><td>seed_2</td><td>with_sensitive</td><td>random_forest</td><td>0.704</td><td>0.643</td><td>0.752</td></tr><tr><td>seed_2</td><td>with_sensitive</td><td>mlp</td><td>0.693</td><td>0.630</td><td>0.752</td></tr><tr><td>seed_3</td><td>without_sensitive</td><td>logistic_regression</td><td>0.701</td><td>0.638</td><td>0.752</td></tr><tr><td>seed_3</td><td>without_sensitive</td><td>random_forest</td><td>0.697</td><td>0.636</td><td>0.752</td></tr><tr><td>seed_3</td><td>without_sensitive</td><td>mlp</td><td>0.688</td><td>0.641</td><td>0.743</td></tr><tr><td>seed_3</td><td>with_sensitive</td><td>logistic_regression</td><td>0.702</td><td>0.639</td><td>0.755</td></tr><tr><td>seed_3</td><td>with_sensitive</td><td>random_forest</td><td>0.699</td><td>0.640</td><td>0.759</td></tr><tr><td>seed_3</td><td>with_sensitive</td><td>mlp</td><td>0.701</td><td>0.644</td><td>0.759</td></tr><tr><td>seed_4</td><td>without_sensitive</td><td>logistic_regression</td><td>0.691</td><td>0.630</td><td>0.736</td></tr><tr><td>seed_4</td><td>without_sensitive</td><td>random_forest</td><td>0.692</td><td>0.637</td><td>0.743</td></tr><tr><td>seed_4</td><td>without_sensitive</td><td>mlp</td><td>0.680</td><td>0.623</td><td>0.739</td></tr><tr><td>seed_4</td><td>with_sensitive</td><td>logistic_regression</td><td>0.694</td><td>0.637</td><td>0.742</td></tr><tr><td>seed_4</td><td>with_sensitive</td><td>random_forest</td><td>0.675</td><td>0.620</td><td>0.747</td></tr><tr><td>seed_4</td><td>with_sensitive</td><td>mlp</td><td>0.671</td><td>0.606</td><td>0.731</td></tr></table>
+
+  <h2>Fairness par attribut protege</h2>
+  <h3>race</h3><table><tr><th>Groupe</th><th>n</th><th>Base rate</th><th>Selection rate</th><th>TPR</th><th>FPR</th><th>Precision</th></tr><tr><td>African-American</td><td>467</td><td>0.535</td><td>0.495</td><td>0.652</td><td>0.313</td><td>0.706</td></tr><tr><td>Caucasian</td><td>319</td><td>0.379</td><td>0.235</td><td>0.421</td><td>0.121</td><td>0.680</td></tr><tr><td>Hispanic</td><td>89</td><td>0.326</td><td>0.247</td><td>0.517</td><td>0.117</td><td>0.682</td></tr><tr><td>Other</td><td>49</td><td>0.408</td><td>0.204</td><td>0.400</td><td>0.069</td><td>0.800</td></tr><tr><td>Asian</td><td>1</td><td>1.000</td><td>0.000</td><td>0.000</td><td>0.000</td><td>0.000</td></tr><tr><td>Native American</td><td>1</td><td>0.000</td><td>0.000</td><td>0.000</td><td>0.000</td><td>0.000</td></tr></table><p>DP diff: <strong>0.495</strong>, DI: <strong>0.000</strong>, EO diff: <strong>0.652</strong>, FPR diff: <strong>0.313</strong>.</p><h3>sex</h3><table><tr><th>Groupe</th><th>n</th><th>Base rate</th><th>Selection rate</th><th>TPR</th><th>FPR</th><th>Precision</th></tr><tr><td>Female</td><td>160</td><td>0.312</td><td>0.256</td><td>0.460</td><td>0.164</td><td>0.561</td></tr><tr><td>Male</td><td>766</td><td>0.484</td><td>0.388</td><td>0.577</td><td>0.210</td><td>0.721</td></tr></table><p>DP diff: <strong>0.131</strong>, DI: <strong>0.661</strong>, EO diff: <strong>0.117</strong>, FPR diff: <strong>0.046</strong>.</p>
+
+  <h2>Mitigation</h2>
+  <table><tr><th>Attribut</th><th>Methode</th><th>Accuracy</th><th>F1</th><th>DP diff</th><th>EO diff</th><th>FPR diff</th></tr><tr><td>race</td><td>reweighting</td><td>0.689</td><td>0.613</td><td>0.482</td><td>0.636</td><td>0.304</td></tr><tr><td>race</td><td>resampling</td><td>0.673</td><td>0.648</td><td>1.000</td><td>1.000</td><td>0.442</td></tr><tr><td>race</td><td>threshold</td><td>0.668</td><td>0.597</td><td>1.000</td><td>1.000</td><td>0.310</td></tr><tr><td>race</td><td>fairlearn_demographic_parity</td><td>0.552</td><td>0.353</td><td>0.255</td><td>0.316</td><td>0.253</td></tr><tr><td>race</td><td>fairlearn_equalized_odds</td><td>0.548</td><td>0.336</td><td>0.248</td><td>0.276</td><td>0.217</td></tr><tr><td>race</td><td>adversarial λ=0.0</td><td>0.687</td><td>0.605</td><td>0.480</td><td>0.632</td><td>0.304</td></tr><tr><td>race</td><td>adversarial λ=0.1</td><td>0.690</td><td>0.617</td><td>0.499</td><td>0.652</td><td>0.323</td></tr><tr><td>race</td><td>adversarial λ=0.5</td><td>0.687</td><td>0.619</td><td>0.516</td><td>0.660</td><td>0.350</td></tr><tr><td>race</td><td>adversarial λ=1.0</td><td>0.691</td><td>0.589</td><td>0.435</td><td>0.596</td><td>0.249</td></tr><tr><td>sex</td><td>reweighting</td><td>0.693</td><td>0.628</td><td>0.130</td><td>0.148</td><td>0.028</td></tr><tr><td>sex</td><td>resampling</td><td>0.684</td><td>0.647</td><td>0.142</td><td>0.180</td><td>0.032</td></tr><tr><td>sex</td><td>threshold</td><td>0.683</td><td>0.619</td><td>0.050</td><td>0.077</td><td>0.054</td></tr><tr><td>sex</td><td>fairlearn_demographic_parity</td><td>0.633</td><td>0.561</td><td>0.023</td><td>0.121</td><td>0.121</td></tr><tr><td>sex</td><td>fairlearn_equalized_odds</td><td>0.668</td><td>0.620</td><td>0.013</td><td>0.074</td><td>0.074</td></tr><tr><td>sex</td><td>adversarial λ=0.0</td><td>0.685</td><td>0.603</td><td>0.132</td><td>0.167</td><td>0.026</td></tr><tr><td>sex</td><td>adversarial λ=0.1</td><td>0.690</td><td>0.614</td><td>0.141</td><td>0.183</td><td>0.029</td></tr><tr><td>sex</td><td>adversarial λ=0.5</td><td>0.691</td><td>0.651</td><td>0.083</td><td>0.152</td><td>0.049</td></tr><tr><td>sex</td><td>adversarial λ=1.0</td><td>0.643</td><td>0.673</td><td>0.063</td><td>0.057</td><td>0.015</td></tr></table>
+
+  <h2>Recommandations</h2>
+  <table><tr><th>Priorite</th><th>Categorie</th><th>Constat</th><th>Action</th></tr><tr><td>HIGH</td><td>Fairness</td><td>Equalized odds eleve pour race (0.652)</td><td>Prioriser l'analyse TPR/FPR par groupe avant tout deploiement.</td></tr><tr><td>HIGH</td><td>Judicial risk</td><td>Ecart de faux positifs notable pour race (0.313)</td><td>Dans un cas type COMPAS, documenter explicitement les faux positifs par groupe.</td></tr><tr><td>HIGH</td><td>Fairness</td><td>Equalized odds eleve pour sex (0.117)</td><td>Prioriser l'analyse TPR/FPR par groupe avant tout deploiement.</td></tr><tr><td>HIGH</td><td>Governance</td><td>Une mesure ponctuelle ne garantit pas une fairness durable.</td><td>Mettre en place un monitoring periodique accuracy, F1, DP, EO, TPR et FPR par groupe.</td></tr><tr><td>MEDIUM</td><td>Fairness</td><td>Parite demographique imparfaite pour race (0.495)</td><td>Comparer reweighting, resampling et seuils de decision sur validation.</td></tr><tr><td>MEDIUM</td><td>Fairness</td><td>Parite demographique imparfaite pour sex (0.131)</td><td>Comparer reweighting, resampling et seuils de decision sur validation.</td></tr><tr><td>MEDIUM</td><td>Methodology</td><td>Les metriques de fairness traduisent des definitions differentes de l'equite.</td><td>Justifier le choix d'equalized odds comme critere principal quand les faux positifs/faux negatifs ont un impact humain fort.</td></tr><tr><td>INFO</td><td>Fairness</td><td>Audit par groupe realise pour race: DP=0.495, EO=0.652, FPR diff=0.313</td><td>Presenter ces valeurs avec les tableaux TPR/FPR/selection rate par groupe dans le rapport final.</td></tr><tr><td>INFO</td><td>Fairness</td><td>Audit par groupe realise pour sex: DP=0.131, EO=0.117, FPR diff=0.046</td><td>Presenter ces valeurs avec les tableaux TPR/FPR/selection rate par groupe dans le rapport final.</td></tr></table>
+
+  <h2>Methodologie</h2>
+  <p>Split stratifie par label et attributs sensibles quand les effectifs le permettent.
+  Les variables categorielles sont encodees par one-hot encoding, les variables numeriques
+  sont imputees et standardisees. Les mesures principales sont demographic parity,
+  disparate impact, equalized odds, TPR/FPR, precision et selection rate par groupe.</p>
 </body>
 </html>
-        

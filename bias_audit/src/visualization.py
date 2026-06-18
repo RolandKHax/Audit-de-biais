@@ -159,7 +159,7 @@ class FairnessVisualizer:
         
         for idx, group in enumerate(groups):
             mask = sensitive_features == group
-            cm = confusion_matrix(y_true[mask], y_pred[mask])
+            cm = confusion_matrix(y_true[mask], y_pred[mask], labels=[0, 1])
             
             # Normaliser
             cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis] * 100

@@ -224,16 +224,66 @@ class DataProcessor:
                 stratify_col = stratify_col + "_" + df[attr].astype(str)
             stratify_col = stratify_col + "_" + y.astype(str)
             
-            X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=test_size, random_state=random_state,
-                stratify=stratify_col
-            )
+            try:
+                X_train, X_test, y_train, y_test = train_test_split(
+                    X, y, test_size=test_size, random_state=random_state,
+                    stratify=stratify_col
+                )
+            except ValueError:
+                X_train, X_test, y_train, y_test = train_test_split(
+                    X, y, test_size=test_size, random_state=random_state,
+                    stratify=y
+                )
         else:
             X_train, X_test, y_train, y_test = train_test_split(
                 X, y, test_size=test_size, random_state=random_state
             )
         
         return X_train, X_test, y_train, y_test
+
+
+def prepare_compas_data(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Normalise un export COMPAS ProPublica pour l'audit.
+
+    La fonction conserve les colonnes utiles, applique les filtres usuels de
+    l'analyse ProPublica quand les colonnes existent, et garde `race` et `sex`
+    comme attributs sensibles exploitables pour l'évaluation.
+    """
+    compas = df.copy()
+
+    if 'days_b_screening_arrest' in compas.columns:
+        compas = compas[
+            compas['days_b_screening_arrest'].between(-30, 30, inclusive='both')
+        ]
+    if 'is_recid' in compas.columns:
+        compas = compas[compas['is_recid'] != -1]
+    if 'c_charge_degree' in compas.columns:
+        compas = compas[compas['c_charge_degree'] != 'O']
+    if 'score_text' in compas.columns:
+        compas = compas[compas['score_text'] != 'N/A']
+
+    preferred_columns = [
+        'age',
+        'age_cat',
+        'race',
+        'sex',
+        'priors_count',
+        'c_charge_degree',
+        'juv_fel_count',
+        'juv_misd_count',
+        'juv_other_count',
+        'decile_score',
+        'score_text',
+        'two_year_recid',
+    ]
+    available = [col for col in preferred_columns if col in compas.columns]
+    if 'two_year_recid' not in available:
+        raise ValueError("Le preset COMPAS exige la colonne cible 'two_year_recid'.")
+
+    compas = compas[available].dropna().reset_index(drop=True)
+    compas['two_year_recid'] = compas['two_year_recid'].astype(int)
+    return compas
 
 
 def generate_sample_data(n_samples: int = 10000, random_state: int = 42) -> pd.DataFrame:

@@ -6,7 +6,7 @@ Tests unitaires pour le module metrics.
 import pytest
 import numpy as np
 import pandas as pd
-from src.metrics import FairnessMetrics, PerformanceMetrics
+from src.metrics import FairnessMetrics, PerformanceMetrics, bootstrap_confidence_interval
 
 
 class TestFairnessMetrics:
@@ -63,6 +63,24 @@ class TestFairnessMetrics:
         # Les différences doivent être entre -1 et 1
         assert -1 <= eod['tpr_difference'] <= 1
         assert -1 <= eod['fpr_difference'] <= 1
+        assert eod['equalized_odds_difference'] == max(
+            abs(eod['tpr_difference']),
+            abs(eod['fpr_difference'])
+        )
+
+    def test_multigroup_fairness_contains_group_metrics(self):
+        """Test métriques multi-groupes utilisées dans le rapport."""
+        from src.metrics import compute_multigroup_fairness
+
+        y_true = np.array([0, 1, 0, 1, 0, 1])
+        y_pred = np.array([0, 1, 1, 1, 0, 0])
+        sensitive = np.array(["A", "A", "B", "B", "C", "C"])
+
+        metrics = compute_multigroup_fairness(y_true, y_pred, sensitive)
+
+        assert set(metrics["group_metrics"]) == {"A", "B", "C"}
+        assert "selection_rate" in metrics["group_metrics"]["A"]
+        assert 0 <= metrics["equalized_odds_difference"] <= 1
     
     def test_compute_all_metrics(self, sample_data):
         """Test calcul de toutes les métriques"""
@@ -178,3 +196,18 @@ class TestPerformanceMetrics:
         assert 'B' in stratified
         assert 'accuracy' in stratified['A']
         assert 'sample_size' in stratified['A']
+
+    def test_bootstrap_confidence_interval(self):
+        y_true = np.array([0, 1, 1, 0, 1, 0])
+        y_pred = np.array([0, 1, 0, 0, 1, 1])
+
+        ci = bootstrap_confidence_interval(
+            y_true,
+            y_pred,
+            lambda yt, yp: PerformanceMetrics.compute_metrics(yt, yp)["accuracy"],
+            n_iterations=20,
+            random_state=0,
+        )
+
+        assert 0 <= ci["lower"] <= ci["upper"] <= 1
+        assert 0 <= ci["mean"] <= 1

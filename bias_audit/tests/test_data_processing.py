@@ -6,7 +6,7 @@ Tests unitaires pour le module data_processing.
 import pytest
 import numpy as np
 import pandas as pd
-from src.data_processing import DataProcessor, generate_sample_data
+from src.data_processing import DataProcessor, generate_sample_data, prepare_compas_data
 
 
 class TestDataProcessor:
@@ -159,3 +159,33 @@ class TestGenerateSampleData:
         
         # Les deux datasets doivent être identiques
         pd.testing.assert_frame_equal(df1, df2)
+
+
+class TestCompasPreprocessing:
+    """Tests du preset COMPAS."""
+
+    def test_prepare_compas_data_filters_and_keeps_core_columns(self):
+        raw = pd.DataFrame({
+            "age": [25, 30, 40],
+            "age_cat": ["Less than 25", "25 - 45", "25 - 45"],
+            "race": ["African-American", "Caucasian", "Hispanic"],
+            "sex": ["Male", "Female", "Male"],
+            "priors_count": [0, 2, 1],
+            "c_charge_degree": ["F", "M", "O"],
+            "juv_fel_count": [0, 0, 0],
+            "juv_misd_count": [0, 1, 0],
+            "juv_other_count": [0, 0, 0],
+            "decile_score": [3, 7, 5],
+            "score_text": ["Low", "High", "Medium"],
+            "days_b_screening_arrest": [0, 5, 2],
+            "is_recid": [0, 1, 0],
+            "two_year_recid": [0, 1, 0],
+        })
+
+        compas = prepare_compas_data(raw)
+
+        assert list(compas["c_charge_degree"]) == ["F", "M"]
+        assert "race" in compas.columns
+        assert "sex" in compas.columns
+        assert "two_year_recid" in compas.columns
+        assert compas["two_year_recid"].dtype in [np.int64, np.int32]

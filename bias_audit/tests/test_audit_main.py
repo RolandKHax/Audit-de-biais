@@ -24,8 +24,13 @@ def test_bias_auditor_end_to_end(tmp_path):
         "protected_attrs": ["gender", "race"],
         "label_name": "label",
         "debiasing_methods": ["reweighting", "resampling"],
+        "models": ["logistic_regression"],
+        "feature_policies": ["without_sensitive"],
+        "seeds": [42],
+        "bootstrap_iterations": 20,
         "output_path": str(report_path),
         "output_dir": str(figures_dir),
+        "results_dir": str(tmp_path / "results"),
     })
 
     auditor.run()
@@ -51,8 +56,13 @@ def test_bias_auditor_resampling_only(tmp_path):
         "protected_attrs": ["gender", "race"],
         "label_name": "label",
         "debiasing_methods": ["resampling"],
+        "models": ["logistic_regression"],
+        "feature_policies": ["without_sensitive"],
+        "seeds": [42],
+        "bootstrap_iterations": 20,
         "output_path": str(report_path),
         "output_dir": str(figures_dir),
+        "results_dir": str(tmp_path / "results"),
     })
 
     auditor.run()

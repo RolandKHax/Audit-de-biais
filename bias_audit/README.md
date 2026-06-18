@@ -1,98 +1,114 @@
-# Audit de biais - modele de classification
+# Audit de biais d'un modèle de classification - COMPAS
 
-Ce projet audite un modele de classification binaire, mesure les ecarts de fairness par groupe protege, applique des mitigations compatibles avec Python 3.14, puis genere des rapports et figures reproductibles.
+Projet complet d'audit de biais sur le dataset réel COMPAS ProPublica. Le workflow mesure les disparités liées à `race` et `sex`, compare plusieurs modèles, applique des méthodes d'atténuation et génère un rapport final ainsi qu'une présentation Beamer.
 
-## Ce que le projet couvre
+## Couverture du cahier de charges
 
-- Exploration des donnees et detection de proxies.
-- Evaluation de performance: accuracy, precision, recall, F1, ROC-AUC.
-- Evaluation de fairness: demographic parity, disparate impact, equal opportunity, average odds, predictive parity.
-- Mitigation compatible Python 3.14: reweighting et resampling.
-- Sorties: rapport HTML, rapport JSON, figures, notebooks executes, synthese executive et Model Card.
-
-Les metriques de fairness sont implementees dans `src/metrics.py`. Les dependances lourdes ou non compatibles Python 3.14 par defaut, comme AIF360, Fairlearn et TensorFlow, ne sont pas requises pour executer le projet.
+- Dataset principal réel : `data/raw/compas-scores-two-years.csv`.
+- Dataset traité : `data/processed/compas_processed.csv`.
+- Baselines : Logistic Regression, Random Forest, MLP.
+- Comparaison avec et sans attributs sensibles.
+- Métriques : accuracy, precision, recall, F1, ROC-AUC, demographic parity, disparate impact, equalized odds, equal opportunity, predictive parity, TPR/FPR, selection rate.
+- Mitigation : reweighting, resampling, Fairlearn reductions, adversarial debiasing PyTorch, post-processing par seuils.
+- Protocole : train/validation/test stratifié et seeds `0 1 2 3 4`.
+- Livrables : scripts, notebooks, tableaux CSV, JSON, figures, rapport PDF, slides PDF, recommandations.
 
 ## Installation
 
 ```bash
-cd bias_audit
+cd "Audit de biais d’un modèle de classification/bias_audit"
 python -m venv venv
 source venv/bin/activate
 python -m pip install --upgrade pip setuptools wheel
 python -m pip install -r requirements.txt
-python -m pip check
 ```
 
-Important: la commande correcte est `pip install -r requirements.txt`. La forme `pip install - requirements.txt` est invalide.
+Note : AIF360 est documenté comme toolkit de référence, mais n'est pas requis par défaut afin d'éviter de bloquer l'exécution sur des dépendances binaires incompatibles.
 
-## Structure
-
-```text
-bias_audit/
-├── configs/          # configuration de reference
-├── data/             # donnees brutes et traitees
-├── models/           # modeles sauvegardes
-├── notebooks/        # workflow notebook en 4 etapes
-├── reports/          # rapports, figures, LaTeX
-├── src/              # code source
-├── tests/            # tests unitaires et smoke tests
-└── outputs/          # sorties experimentales intermediaires
-```
-
-## Execution rapide
-
-Generer un jeu de donnees synthetique:
+## Exécution complète
 
 ```bash
-python -c "from src.data_processing import generate_sample_data; generate_sample_data(5000).to_csv('data/processed/dataset.csv', index=False)"
+bash scripts/run_all.sh
 ```
 
-Lancer l'audit complet:
+Cette commande :
+
+1. télécharge COMPAS ;
+2. génère `data/processed/compas_processed.csv` ;
+3. lance l'audit multi-seeds ;
+4. applique les mitigations ;
+5. génère les tableaux dans `results/tables/` ;
+6. génère les métriques dans `results/metrics/` ;
+7. génère `reports/latex/rapport_audit_biais.tex` et `slides/presentation.tex` ;
+8. compile les PDF si `pdflatex` est disponible.
+
+## Scripts principaux
+
+```bash
+python scripts/download_compas.py
+python scripts/train_baseline.py
+python scripts/evaluate_fairness.py
+python scripts/train_adversarial.py
+```
+
+Commande CLI équivalente au run complet :
 
 ```bash
 python -m src.audit_main \
-  --data data/processed/dataset.csv \
-  --protected-attrs gender race \
-  --label label \
-  --debiasing reweighting resampling \
+  --data data/raw/compas-scores-two-years.csv \
+  --preset compas \
+  --protected-attrs race sex \
+  --label two_year_recid \
+  --debiasing reweighting resampling threshold fairlearn_demographic_parity fairlearn_equalized_odds adversarial_pytorch \
+  --models logistic_regression random_forest mlp \
+  --feature-policies without_sensitive with_sensitive \
+  --seeds 0 1 2 3 4 \
   --output reports/audit_report.html \
-  --output-dir reports/figures
+  --output-dir reports/figures \
+  --results-dir results
 ```
-
-La commande `python src/audit_main.py ...` fonctionne aussi, mais `python -m src.audit_main` est la forme recommandee depuis la racine `bias_audit`.
 
 ## Notebooks
 
-Les notebooks sont executables dans cet ordre:
+Les notebooks suivent la feuille de route attendue :
 
-1. `notebooks/01_EDA.ipynb`
-2. `notebooks/02_baseline_evaluation.ipynb`
-3. `notebooks/03_debiasing_experiments.ipynb`
-4. `notebooks/04_final_analysis.ipynb`
+1. `notebooks/01_EDA_bias_analysis.ipynb`
+2. `notebooks/02_baseline_model.ipynb`
+3. `notebooks/03_fairness_metrics.ipynb`
+4. `notebooks/04_mitigation_resampling.ipynb`
+5. `notebooks/05_adversarial_debiasing_pytorch.ipynb`
+6. `notebooks/06_comparison_recommendations.ipynb`
 
-Execution en ligne de commande:
+## Livrables générés
+
+- `reports/audit_report.html`
+- `reports/audit_report.json`
+- `reports/latex/rapport_audit_biais.pdf`
+- `slides/presentation.pdf`
+- `results/tables/baseline_summary.csv`
+- `results/tables/baseline_summary_aggregate.csv`
+- `results/tables/fairness_by_group.csv`
+- `results/tables/mitigation_summary.csv`
+- `results/metrics/audit_metrics.json`
+- `reports/figures/*.png`
+
+## Validation
 
 ```bash
-jupyter nbconvert --execute notebooks/*.ipynb --to notebook --inplace
-```
-
-## Tests
-
-```bash
+python -m compileall -q src scripts tests
 python -m pytest tests -q
-python -m compileall -q src tests
 ```
 
-## Rapport LaTeX
-
-Le rapport source se trouve dans `reports/latex/rapport_audit_biais.tex`.
+Compilation manuelle des PDF :
 
 ```bash
 cd reports/latex
 pdflatex rapport_audit_biais.tex
-bibtex rapport_audit_biais
+bibtex rapport_audit_biais || true
 pdflatex rapport_audit_biais.tex
 pdflatex rapport_audit_biais.tex
-```
 
-La compilation LaTeX necessite une distribution LaTeX locale.
+cd ../../slides
+pdflatex presentation.tex
+pdflatex presentation.tex
+```

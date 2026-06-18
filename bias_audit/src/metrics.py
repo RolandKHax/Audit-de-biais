@@ -8,9 +8,174 @@ from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score,
     roc_auc_score, confusion_matrix, classification_report
 )
-from typing import Dict, List, Tuple
+from typing import Callable, Dict, List, Tuple
 import warnings
 warnings.filterwarnings('ignore')
+
+
+def _as_array(values) -> np.ndarray:
+    """Convertit pandas/listes en tableau numpy plat."""
+    return np.asarray(values).reshape(-1)
+
+
+def _safe_divide(numerator: float, denominator: float, default: float = 0.0) -> float:
+    return float(numerator / denominator) if denominator else default
+
+
+def binary_confusion_rates(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, float]:
+    """Retourne les taux de confusion principaux pour une classification binaire."""
+    cm = confusion_matrix(_as_array(y_true), _as_array(y_pred), labels=[0, 1])
+    tn, fp, fn, tp = cm.ravel()
+    return {
+        'tn': int(tn),
+        'fp': int(fp),
+        'fn': int(fn),
+        'tp': int(tp),
+        'tpr': _safe_divide(tp, tp + fn),
+        'fpr': _safe_divide(fp, fp + tn),
+        'tnr': _safe_divide(tn, tn + fp),
+        'fnr': _safe_divide(fn, fn + tp),
+    }
+
+
+def compute_group_metrics(y_true: np.ndarray, y_pred: np.ndarray,
+                          sensitive_features: np.ndarray,
+                          y_scores: np.ndarray = None) -> Dict[str, Dict]:
+    """Calcule performance, selection rate, TPR/FPR et base rate pour chaque groupe."""
+    y_true = _as_array(y_true)
+    y_pred = _as_array(y_pred)
+    sensitive_features = _as_array(sensitive_features)
+    y_scores = _as_array(y_scores) if y_scores is not None else None
+
+    groups = pd.Series(sensitive_features).dropna().unique()
+    results = {}
+    for group in groups:
+        mask = sensitive_features == group
+        if mask.sum() == 0:
+            continue
+        group_scores = y_scores[mask] if y_scores is not None else None
+        perf = PerformanceMetrics.compute_metrics(y_true[mask], y_pred[mask], group_scores)
+        rates = binary_confusion_rates(y_true[mask], y_pred[mask])
+        results[str(group)] = {
+            'sample_size': int(mask.sum()),
+            'base_rate': float(np.mean(y_true[mask])),
+            'selection_rate': float(np.mean(y_pred[mask])),
+            'accuracy': float(perf['accuracy']),
+            'precision': float(perf['precision']),
+            'recall': float(perf['recall']),
+            'f1_score': float(perf['f1_score']),
+            'tpr': float(rates['tpr']),
+            'fpr': float(rates['fpr']),
+            'tnr': float(rates['tnr']),
+            'fnr': float(rates['fnr']),
+        }
+        if 'roc_auc' in perf and perf['roc_auc'] is not None:
+            results[str(group)]['roc_auc'] = float(perf['roc_auc'])
+    return results
+
+
+def compute_multigroup_fairness(y_true: np.ndarray, y_pred: np.ndarray,
+                                sensitive_features: np.ndarray,
+                                y_scores: np.ndarray = None) -> Dict:
+    """
+    Calcule des métriques de fairness valables pour deux groupes ou plus.
+
+    Equalized odds difference est le maximum entre l'écart de TPR et l'écart de FPR,
+    conformément à la définition usuelle utilisée dans les audits.
+    """
+    group_metrics = compute_group_metrics(y_true, y_pred, sensitive_features, y_scores)
+    if not group_metrics:
+        return {
+            'group_metrics': {},
+            'demographic_parity_difference': 0.0,
+            'demographic_parity_ratio': 1.0,
+            'disparate_impact': 1.0,
+            'tpr_difference': 0.0,
+            'fpr_difference': 0.0,
+            'equalized_odds_difference': 0.0,
+            'average_odds_difference': 0.0,
+            'equal_opportunity_difference': 0.0,
+            'predictive_parity_difference': 0.0,
+        }
+
+    selection_rates = np.array([m['selection_rate'] for m in group_metrics.values()])
+    tprs = np.array([m['tpr'] for m in group_metrics.values()])
+    fprs = np.array([m['fpr'] for m in group_metrics.values()])
+    precisions = np.array([m['precision'] for m in group_metrics.values()])
+
+    min_selection = float(selection_rates.min())
+    max_selection = float(selection_rates.max())
+    dp_diff = max_selection - min_selection
+    dp_ratio = _safe_divide(min_selection, max_selection, default=1.0)
+    tpr_diff = float(tprs.max() - tprs.min())
+    fpr_diff = float(fprs.max() - fprs.min())
+
+    return {
+        'group_metrics': group_metrics,
+        'demographic_parity_difference': float(dp_diff),
+        'demographic_parity_ratio': float(dp_ratio),
+        'disparate_impact': float(dp_ratio),
+        'tpr_difference': tpr_diff,
+        'fpr_difference': fpr_diff,
+        'equalized_odds_difference': float(max(tpr_diff, fpr_diff)),
+        'average_odds_difference': float(0.5 * (tpr_diff + fpr_diff)),
+        'equal_opportunity_difference': tpr_diff,
+        'predictive_parity_difference': float(precisions.max() - precisions.min()),
+    }
+
+
+def bootstrap_confidence_interval(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    metric_fn: Callable[[np.ndarray, np.ndarray], float],
+    n_iterations: int = 200,
+    confidence_level: float = 0.95,
+    random_state: int = 42,
+) -> Dict[str, float]:
+    """Intervalle de confiance bootstrap pour une métrique binaire."""
+    y_true = _as_array(y_true)
+    y_pred = _as_array(y_pred)
+    rng = np.random.default_rng(random_state)
+    values = []
+    n = len(y_true)
+
+    if n == 0:
+        return {'mean': 0.0, 'lower': 0.0, 'upper': 0.0}
+
+    for _ in range(n_iterations):
+        idx = rng.integers(0, n, n)
+        try:
+            values.append(float(metric_fn(y_true[idx], y_pred[idx])))
+        except Exception:
+            continue
+
+    if not values:
+        return {'mean': 0.0, 'lower': 0.0, 'upper': 0.0}
+
+    alpha = 1.0 - confidence_level
+    return {
+        'mean': float(np.mean(values)),
+        'lower': float(np.quantile(values, alpha / 2)),
+        'upper': float(np.quantile(values, 1 - alpha / 2)),
+    }
+
+
+def summarize_numeric_rows(rows: List[Dict], group_keys: List[str]) -> List[Dict]:
+    """Moyenne et écart-type par groupe de colonnes pour une liste de résultats."""
+    if not rows:
+        return []
+    df = pd.DataFrame(rows)
+    numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+    summaries = []
+    for keys, group in df.groupby(group_keys, dropna=False):
+        if not isinstance(keys, tuple):
+            keys = (keys,)
+        row = {key: value for key, value in zip(group_keys, keys)}
+        for col in numeric_cols:
+            row[f'{col}_mean'] = float(group[col].mean())
+            row[f'{col}_std'] = float(group[col].std(ddof=0))
+        summaries.append(row)
+    return summaries
 
 
 class FairnessMetrics:
@@ -35,8 +200,12 @@ class FairnessMetrics:
         DPD = P(Ŷ=1|A=privileged) - P(Ŷ=1|A=unprivileged)
         Idéalement proche de 0. Valeurs acceptables: [-0.1, 0.1]
         """
+        y_pred = _as_array(y_pred)
+        sensitive_features = _as_array(sensitive_features)
         priv_mask = sensitive_features == self.privileged_value
         unpriv_mask = sensitive_features == self.unprivileged_value
+        if priv_mask.sum() == 0 or unpriv_mask.sum() == 0:
+            return 0.0
         
         priv_rate = np.mean(y_pred[priv_mask])
         unpriv_rate = np.mean(y_pred[unpriv_mask])
@@ -51,14 +220,18 @@ class FairnessMetrics:
         DPR = P(Ŷ=1|A=unprivileged) / P(Ŷ=1|A=privileged)
         Idéalement proche de 1. Valeurs acceptables: [0.8, 1.25]
         """
+        y_pred = _as_array(y_pred)
+        sensitive_features = _as_array(sensitive_features)
         priv_mask = sensitive_features == self.privileged_value
         unpriv_mask = sensitive_features == self.unprivileged_value
+        if priv_mask.sum() == 0 or unpriv_mask.sum() == 0:
+            return 1.0
         
         priv_rate = np.mean(y_pred[priv_mask])
         unpriv_rate = np.mean(y_pred[unpriv_mask])
         
         if priv_rate == 0:
-            return np.inf
+            return 1.0 if unpriv_rate == 0 else np.inf
         
         return unpriv_rate / priv_rate
     
@@ -81,8 +254,18 @@ class FairnessMetrics:
         EOD_TPR = TPR(privileged) - TPR(unprivileged)
         EOD_FPR = FPR(privileged) - FPR(unprivileged)
         """
+        y_true = _as_array(y_true)
+        y_pred = _as_array(y_pred)
+        sensitive_features = _as_array(sensitive_features)
         priv_mask = sensitive_features == self.privileged_value
         unpriv_mask = sensitive_features == self.unprivileged_value
+        if priv_mask.sum() == 0 or unpriv_mask.sum() == 0:
+            return {
+                'tpr_difference': 0.0,
+                'fpr_difference': 0.0,
+                'average_odds_difference': 0.0,
+                'equalized_odds_difference': 0.0,
+            }
         
         # True Positive Rate
         tpr_priv = self._tpr(y_true[priv_mask], y_pred[priv_mask])
@@ -92,10 +275,13 @@ class FairnessMetrics:
         fpr_priv = self._fpr(y_true[priv_mask], y_pred[priv_mask])
         fpr_unpriv = self._fpr(y_true[unpriv_mask], y_pred[unpriv_mask])
         
+        tpr_difference = tpr_priv - tpr_unpriv
+        fpr_difference = fpr_priv - fpr_unpriv
         return {
-            'tpr_difference': tpr_priv - tpr_unpriv,
-            'fpr_difference': fpr_priv - fpr_unpriv,
-            'average_odds_difference': 0.5 * ((tpr_priv - tpr_unpriv) + (fpr_priv - fpr_unpriv))
+            'tpr_difference': tpr_difference,
+            'fpr_difference': fpr_difference,
+            'average_odds_difference': 0.5 * (tpr_difference + fpr_difference),
+            'equalized_odds_difference': max(abs(tpr_difference), abs(fpr_difference)),
         }
     
     def equal_opportunity_difference(self, y_true: np.ndarray, y_pred: np.ndarray,
@@ -106,8 +292,13 @@ class FairnessMetrics:
         EOppD = TPR(privileged) - TPR(unprivileged)
         Se concentre uniquement sur les vrais positifs.
         """
+        y_true = _as_array(y_true)
+        y_pred = _as_array(y_pred)
+        sensitive_features = _as_array(sensitive_features)
         priv_mask = sensitive_features == self.privileged_value
         unpriv_mask = sensitive_features == self.unprivileged_value
+        if priv_mask.sum() == 0 or unpriv_mask.sum() == 0:
+            return 0.0
         
         tpr_priv = self._tpr(y_true[priv_mask], y_pred[priv_mask])
         tpr_unpriv = self._tpr(y_true[unpriv_mask], y_pred[unpriv_mask])
@@ -121,8 +312,13 @@ class FairnessMetrics:
         
         PPD = Precision(privileged) - Precision(unprivileged)
         """
+        y_true = _as_array(y_true)
+        y_pred = _as_array(y_pred)
+        sensitive_features = _as_array(sensitive_features)
         priv_mask = sensitive_features == self.privileged_value
         unpriv_mask = sensitive_features == self.unprivileged_value
+        if priv_mask.sum() == 0 or unpriv_mask.sum() == 0:
+            return 0.0
         
         # Précision pour chaque groupe
         prec_priv = precision_score(y_true[priv_mask], y_pred[priv_mask], zero_division=0)
@@ -163,6 +359,9 @@ class FairnessMetrics:
         )
         
         # Interprétation automatique
+        metrics['group_metrics'] = compute_group_metrics(
+            y_true, y_pred, sensitive_features, y_scores
+        )
         metrics['interpretation'] = self._interpret_metrics(metrics)
         
         return metrics
@@ -204,10 +403,10 @@ class FairnessMetrics:
             interpretation['demographic_parity'] = "✗ Parité démographique faible"
         
         # Equalized Odds
-        avg_odds = abs(metrics['average_odds_difference'])
-        if avg_odds <= 0.1:
+        equalized_odds = abs(metrics.get('equalized_odds_difference', metrics['average_odds_difference']))
+        if equalized_odds <= 0.1:
             interpretation['equalized_odds'] = "✓ Bonnes odds égalisées"
-        elif avg_odds <= 0.2:
+        elif equalized_odds <= 0.2:
             interpretation['equalized_odds'] = "⚠ Odds égalisées modérées"
         else:
             interpretation['equalized_odds'] = "✗ Odds égalisées faibles"

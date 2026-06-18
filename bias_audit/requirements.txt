@@ -1,14 +1,16 @@
 # Python support
 # This dependency set targets Python 3.14.
-# Fairness metrics are implemented in src/metrics.py. AIF360, Fairlearn,
-# TensorFlow and pinned old PyTorch builds were removed because they force
-# older binary dependencies or do not provide Python 3.14-compatible wheels.
+# AIF360 remains documented as a reference toolkit but is not required by the
+# executable workflow because its binary dependency stack can lag new Python
+# versions. Fairlearn and PyTorch are used when wheels are available.
 
 # Core ML Libraries
 numpy==2.4.6
 pandas==2.3.3
 scikit-learn==1.8.0
 scipy==1.17.1
+fairlearn==0.14.0
+torch==2.12.1
 
 # Visualization
 matplotlib==3.10.9

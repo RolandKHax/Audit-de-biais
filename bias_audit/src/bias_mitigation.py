@@ -26,7 +26,7 @@ class PreprocessingDebias:
         """
         Calcule les poids pour compenser les biais.
         
-        Formule: w(x,y,s) = P(y)P(s) / P(y,s)P(s|y)
+        Formule de reweighing: w(y,s) = P(y)P(s) / P(y,s)
         """
         weights = np.ones(len(X))
         
@@ -44,11 +44,8 @@ class PreprocessingDebias:
                 # P(y, s)
                 p_y_s = mask.sum() / len(X)
                 
-                # P(s|y)
-                p_s_given_y = mask.sum() / (y == y_val).sum()
-                
-                if p_y_s > 0 and p_s_given_y > 0:
-                    w = (p_y[y_val] * p_s[s_val]) / (p_y_s * p_s_given_y)
+                if p_y_s > 0:
+                    w = (p_y[y_val] * p_s[s_val]) / p_y_s
                     weights[mask] = w
         
         # Normaliser les poids
@@ -69,36 +66,35 @@ class PreprocessingDebias:
         y_resampled = y.copy()
         sensitive_resampled = sensitive_features.copy()
         
-        # Identifier le groupe minoritaire
-        group_counts = sensitive_features.value_counts()
-        minority_group = group_counts.idxmin()
-        majority_group = group_counts.idxmax()
-        
         if strategy == 'oversample':
-            # Oversample le groupe minoritaire
-            minority_mask = sensitive_features == minority_group
-            
-            X_minority = X[minority_mask]
-            y_minority = y[minority_mask]
-            sensitive_minority = sensitive_features[minority_mask]
-            
-            X_majority = X[~minority_mask]
-            y_majority = y[~minority_mask]
-            sensitive_majority = sensitive_features[~minority_mask]
-            
-            # Upsample
-            X_minority_upsampled, y_minority_upsampled, sensitive_minority_upsampled = resample(
-                X_minority, y_minority, sensitive_minority,
-                n_samples=len(X_majority),
-                random_state=42
-            )
-            
-            # Combiner
-            X_resampled = pd.concat([X_majority, X_minority_upsampled])
-            y_resampled = pd.concat([y_majority, y_minority_upsampled])
-            sensitive_resampled = pd.concat([sensitive_majority, sensitive_minority_upsampled])
+            # Equilibrage par couples (groupe sensible, label), plus robuste pour
+            # les métriques de TPR/FPR qu'un simple équilibrage par groupe.
+            cells = []
+            for sensitive_val in sensitive_features.unique():
+                for label_val in y.unique():
+                    mask = (sensitive_features == sensitive_val) & (y == label_val)
+                    if mask.sum() > 0:
+                        cells.append((X[mask], y[mask], sensitive_features[mask]))
+
+            target_size = max(len(cell[1]) for cell in cells)
+            resampled_cells = []
+            for X_cell, y_cell, s_cell in cells:
+                replace = len(y_cell) < target_size
+                X_part, y_part, s_part = resample(
+                    X_cell, y_cell, s_cell,
+                    n_samples=target_size,
+                    replace=replace,
+                    random_state=42
+                )
+                resampled_cells.append((X_part, y_part, s_part))
+
+            X_resampled = pd.concat([cell[0] for cell in resampled_cells])
+            y_resampled = pd.concat([cell[1] for cell in resampled_cells])
+            sensitive_resampled = pd.concat([cell[2] for cell in resampled_cells])
         
         elif strategy == 'undersample':
+            group_counts = sensitive_features.value_counts()
+            majority_group = group_counts.idxmax()
             # Undersample le groupe majoritaire
             majority_mask = sensitive_features == majority_group
             
